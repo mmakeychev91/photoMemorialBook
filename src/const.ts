@@ -1,4 +1,5 @@
 export enum AppRoute {
   Main = "/",
-  AboutHealth = "/health"
+  AboutHealth = "/health",
+  AboutRepose = "/repose"
 }
