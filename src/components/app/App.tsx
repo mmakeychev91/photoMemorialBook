@@ -1,7 +1,7 @@
 import React from "react";
 import { Route, BrowserRouter, Routes } from "react-router-dom";
-import { AppRoute } from "../../../const";
-import StartPage from "../../../pages/startPage/startPage";
+import { AppRoute } from "../../const";
+import StartPage from "../../pages/startPage/startPage";
 
 const App = (): JSX.Element => (
   <BrowserRouter>

@@ -1,10 +1,8 @@
 import React from "react";
-import styles from "./startPage.module.css";
+import SliderWrap from "./../../components/sliderWrap/SliderWrap"
 
 const StartPage = (): JSX.Element => (
-  <div className="container">
-    <div className={styles.startPageButtonsWrap}></div>
-  </div>
+    <SliderWrap></SliderWrap>
 );
 
 export default StartPage;
