@@ -3,3 +3,7 @@
   min-width: 360px;
   height: 100%;
 }
+body {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+}
