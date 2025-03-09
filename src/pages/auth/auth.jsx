@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-
+import { Form, Input, Button } from 'antd'
 import { LoginLogo, EyeIcon, EyeOff } from '../../resource/img/svg';
 import { useAuth } from '../../services/authService';
+import styles from './auth.module.scss'
 
 export let errorSetter;
 
@@ -32,17 +33,13 @@ const Auth = () => {
 
     return (
         <>
-            <div>
-                <div>
-                    <h1>Фотопомянник</h1>
-                </div>
-                <div>
-                    <form onSubmit={handleSubmit}>
-                        <h2 >Вход в аккаунт</h2>
+            <div className={styles.wrap}>
+                <div className={`container ${styles.container}`}>
+                    <Form className={styles.form} onSubmit={handleSubmit}>
                         {errorMessage && <p>{errorMessage}</p>}
-                        <label>
+                        <label className={styles.label}>
                             <span>Логин</span>
-                            <input
+                            <Input
                                 className={username ? 'input active' : 'input'}
                                 type="text"
                                 name="login"
@@ -51,9 +48,9 @@ const Auth = () => {
                                 value={username}
                             />
                         </label>
-                        <label>
+                        <label className={styles.label}>
                             <span>Пароль</span>
-                            <input
+                            <Input.Password
                                 className={
                                     password ? 'input input-password active' : 'input input-password'
                                 }
@@ -63,23 +60,14 @@ const Auth = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 value={password}
                             />
-                            <button
-                                type="button"
-                                onClick={togglePasswordType}
-                            >
-                                {passwordType === 'text' ? (
-                                    <EyeOff className="eye-off" />
-                                ) : (
-                                    <EyeIcon className="eye-on" />
-                                )}
-                            </button>
                         </label>
-                        <button type="submit">
+                        <Button className={styles.button} htmlType='submit' type="primary">
                             Отправить
-                        </button>
-                    </form>
+                        </Button>
+                    </Form>
                 </div>
             </div>
+
         </>
     );
 };
