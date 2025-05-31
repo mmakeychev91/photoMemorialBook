@@ -1,13 +1,14 @@
 version: "3.8"
 
 services:
-  frontend:
+    app:
     build: .
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./:/frontend # Маппинг в WORKDIR контейнера
-      - /frontend/node_modules
+    container_name: react_app
     environment:
-      - CHOKIDAR_USEPOLLING=true # Для hot-reload
-    command: npm start
+      - NODE_ENV=production
+    env_file:
+      - .env.production
+    volumes:
+      - .:/app
+      - /app/node_modules
+    restart: always

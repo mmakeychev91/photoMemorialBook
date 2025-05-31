@@ -1,22 +1,35 @@
-# ===== 1. Этап сборки =====
-FROM node:18-alpine AS builder
+# Stage 1: Build
+FROM node:20.10-alpine AS builder
+WORKDIR /usr/app
 
-# Используем нейтральное имя (не /app)
-WORKDIR /frontend
+# 1. Копируем зависимости
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
-# Копируем только нужное
-COPY package*.json ./
-RUN npm ci
-
-# Копируем исходники (включая твою папку components/app)
+# 2. Копируем исходный код
+COPY tsconfig.json ./
 COPY public ./public
 COPY src ./src
 
-# Сборка
-RUN npm run build
+# 3. Собираем production-версию
+RUN yarn build
 
-# ===== 2. Продакшен =====
-FROM nginx:alpine
-COPY --from=builder /frontend/build /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Stage 2: Production
+FROM node:20.10-alpine
+WORKDIR /usr/app
+
+# 1. Копируем только необходимое
+COPY --from=builder /usr/app/build ./build
+COPY --from=builder /usr/app/public ./public
+COPY --from=builder /usr/app/package.json ./
+
+# 2. Устанавливаем production-зависимости
+RUN yarn install --production --frozen-lockfile
+
+# 3. Устанавливаем serve для статики
+RUN yarn global add serve
+
+# 4. Запускаем сервер
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD ["serve", "-s", "build", "-l", "3000"]

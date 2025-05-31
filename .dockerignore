@@ -1,8 +1,0 @@
-# Игнорируем всё ненужное
-node_modules
-.git
-.DS_Store
-.env*
-build
-dist
-npm-debug.log
