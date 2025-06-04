@@ -3,6 +3,7 @@ import { useAuth } from '../services/authService';
 
 export const ProtectRoutes = () => {
     const { token } = useAuth();
-
-    return token ? <Outlet /> : <Navigate to="/login" exact />;
+    console.log('ProtectRoutes token check:', token); // debug
+    
+    return token ? <Outlet /> : <Navigate to="/login" replace />;
 };

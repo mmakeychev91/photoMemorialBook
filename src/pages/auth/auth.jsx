@@ -1,74 +1,97 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Form, Input, Button } from 'antd'
-import { LoginLogo, EyeIcon, EyeOff } from '../../resource/img/svg';
+import { Form, Input, Button, message } from 'antd';
+import { ReactComponent as EyeIcon } from "../../resource/img/svg/form-eye.svg";
+import { ReactComponent as EyeOff } from "../../resource/img/svg/form-eye-off.svg";
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../services/authService';
-import styles from './auth.module.scss'
-
-export let errorSetter;
+import styles from './auth.module.scss';
 
 const Auth = () => {
-    const [username, setUserName] = useState('');
-    const [password, setPassword] = useState('');
     const [passwordType, setPasswordType] = useState('password');
-
-    const [errorMessage, setErrorMessage] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
     const { login, token } = useAuth();
-    errorSetter = setErrorMessage;
+    
+    // Автоматический редирект при наличии токена
+    useEffect(() => {
+        if (token) {
+            navigate('/home');
+        }
+    }, [token, navigate]);
+
     const togglePasswordType = useCallback(() => {
-        setPasswordType((prevType) =>
+        setPasswordType((prevType) => 
             prevType === 'password' ? 'text' : 'password'
         );
     }, []);
 
-    useEffect(() => {
-        const inputEl = document.querySelector('.input-password');
-        inputEl.type = passwordType;
-    }, [passwordType]);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        login({ username, password });
-
+    const onFinish = async (values) => {
+        setLoading(true);
+        try {
+            await login({ 
+                username: values.username, 
+                password: values.password 
+            });
+        } catch (error) {
+            message.error(error.message || 'Ошибка авторизации');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <>
-            <div className={styles.wrap}>
-                <div className={`container ${styles.container}`}>
-                    <Form className={styles.form} onSubmit={handleSubmit}>
-                        {errorMessage && <p>{errorMessage}</p>}
-                        <label className={styles.label}>
-                            <span>Логин</span>
-                            <Input
-                                className={username ? 'input active' : 'input'}
-                                type="text"
-                                name="login"
-                                required
-                                onChange={(e) => setUserName(e.target.value)}
-                                value={username}
-                            />
-                        </label>
-                        <label className={styles.label}>
-                            <span>Пароль</span>
-                            <Input.Password
-                                className={
-                                    password ? 'input input-password active' : 'input input-password'
-                                }
-                                type={passwordType}
-                                name="password"
-                                required
-                                onChange={(e) => setPassword(e.target.value)}
-                                value={password}
-                            />
-                        </label>
-                        <Button className={styles.button} htmlType='submit' type="primary">
-                            Отправить
-                        </Button>
-                    </Form>
-                </div>
-            </div>
+        <div className={styles.wrap}>
+            <div className={`container ${styles.container}`}>
+                <Form
+                    className={styles.form}
+                    onFinish={onFinish}
+                    initialValues={{ remember: true }}
+                >
+                    <Form.Item
+                        name="username"
+                        rules={[{ 
+                            required: true, 
+                            message: 'Пожалуйста, введите логин!' 
+                        }]}
+                    >
+                        <Input 
+                            placeholder="Логин" 
+                            disabled={loading}
+                        />
+                    </Form.Item>
 
-        </>
+                    <Form.Item
+                        name="password"
+                        rules={[{ 
+                            required: true, 
+                            message: 'Пожалуйста, введите пароль!' 
+                        }]}
+                    >
+                        <Input.Password
+                            placeholder="Пароль"
+                            type={passwordType}
+                            disabled={loading}
+                            iconRender={(visible) => (
+                                visible ? 
+                                    <EyeOff onClick={togglePasswordType} /> : 
+                                    <EyeIcon onClick={togglePasswordType} />
+                            )}
+                        />
+                    </Form.Item>
+
+                    <Form.Item>
+                        <Button 
+                            type="primary" 
+                            htmlType="submit" 
+                            loading={loading}
+                            block
+                        >
+                            Войти
+                        </Button>
+                    </Form.Item>
+                </Form>
+            </div>
+        </div>
     );
 };
 

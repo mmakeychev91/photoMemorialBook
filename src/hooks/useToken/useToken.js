@@ -2,27 +2,25 @@ import { useState } from 'react';
 
 export default function useToken() {
     const getToken = () => {
-        const tokenString = localStorage.getItem('token');
-        return tokenString ? JSON.parse(tokenString) : null;
+        const tokenData = localStorage.getItem('authData');
+        return tokenData ? JSON.parse(tokenData) : null;
     };
 
-    const [token, setToken] = useState(getToken());
+    const [token, setTokenState] = useState(getToken());
 
-    const saveToken = (userToken) => {
-        localStorage.setItem('token', JSON.stringify(userToken));
-        setToken(userToken);
+    const saveToken = (authData) => {
+        // Сохраняем все данные авторизации
+        localStorage.setItem('authData', JSON.stringify(authData));
+        setTokenState(authData);
     };
 
     const removeToken = () => {
-        if (token) {
-            localStorage.removeItem('token');
-            setToken(null);
-        }
-
+        localStorage.removeItem('authData');
+        setTokenState(null);
     };
 
     return {
-        token,
+        token, // Теперь содержит ВСЕ данные: {access_token, refresh_token и т.д.}
         setToken: saveToken,
         removeToken,
         getToken,
