@@ -21,7 +21,7 @@ jobs:
 
       - name: Deploy via SSH
         run: |
-          ssh chulpan-app@81.19.136.114 << 'EOF'
+          ssh chulpan-app@81.19.136.114 << EOF
             docker ps
 #            cd /path/to/your/project
 #            git pull
