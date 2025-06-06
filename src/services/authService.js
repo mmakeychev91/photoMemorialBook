@@ -36,7 +36,7 @@ export const UserProvider = ({ children }) => {
             onUnauthorized: refreshToken,
             hasRefreshToken
         });
-        
+
         return cleanup;
     }, [token, initialize, hasRefreshToken]);
 
@@ -84,26 +84,27 @@ export const UserProvider = ({ children }) => {
         }
 
         try {
-            const params = new URLSearchParams();
-            params.append('grant_type', 'refresh_token');
-            params.append('refresh_token', token.refresh_token);
-            params.append('client_id', 'string');
-            params.append('client_secret', 'string');
+            // 1. Добавляем refresh_token в URL как query-параметр
+            const url = new URL(`${_baseUrl}/api/auth/refresh`);
+            url.searchParams.append('refresh_token', token.refresh_token);
 
+            // 2. Отправляем запрос с пустым телом (или оставляем form-data, если нужно)
             const response = await fetchData({
-                url: `${_baseUrl}/api/auth/refresh`,
+                url: url.toString(),
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                data: params
+                data: new URLSearchParams({
+                    grant_type: 'refresh_token',
+                    client_id: 'string',
+                    client_secret: 'string',
+                }),
             });
 
             const newToken = {
                 access_token: response.access_token,
-                refresh_token: response.refresh_token,
-                token_type: response.token_type,
-                user_id: response.user_id || token.user_id
+                refresh_token: token.refresh_token,
             };
 
             setToken(newToken);
@@ -115,6 +116,7 @@ export const UserProvider = ({ children }) => {
             throw error;
         }
     }, [token, fetchData, navigate, removeToken, setToken, hasRefreshToken]);
+
 
     // Выход из системы
     const logout = useCallback(() => {

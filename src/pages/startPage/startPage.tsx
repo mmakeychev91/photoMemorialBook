@@ -1,8 +1,76 @@
-import React from "react";
-import SliderWrap from "./../../components/sliderWrap/SliderWrap"
+import styles from './startPage.module.scss'
+import { Button } from 'antd';
+import { LogoutOutlined } from '@ant-design/icons';
+import { useAuth } from '../../services/authService';
+import { useFoldersService } from "../../services/folders/foldersService";
+import React, { useEffect, useState } from "react";
+import { Alert, Spin } from "antd"; // Или ваш компонент загрузки
+import Slider from '../../components/slider/slider';
 
-const StartPage = (): JSX.Element => (
-    <SliderWrap></SliderWrap>
-);
+
+
+const StartPage = (): JSX.Element => {
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [folders, setFolders] = useState([]);
+
+    const { getFolders } = useFoldersService();
+    const { logout } = useAuth();
+    let isHaveFolders = false;
+
+
+    useEffect(() => {
+        const fetchFolders = async () => {
+            try {
+                setLoading(true);
+                const foldersData = await getFolders();
+                setFolders(foldersData);
+            } catch (err) {
+                setError('Ошибка при загрузке данных');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchFolders();
+    }, []);
+
+    if (loading) {
+        return <Spin tip="Загрузка..." fullscreen />;
+    }
+
+    if (error) {
+        return <Alert message={error} type="error" />;
+    }
+
+    const hasFolders = () => {
+        if (folders.length > 0) {
+            isHaveFolders = true;
+        } else {
+            isHaveFolders = false
+        }
+    }
+    hasFolders();
+    if (isHaveFolders) {
+        return <Slider></Slider>
+    } else {
+
+    }
+    return (
+
+        <div className="container">
+            <div className={styles.startMessage}>
+                <Button className={styles.logoutBtn}
+                    icon={<LogoutOutlined />}
+                    onClick={logout}
+                >
+                </Button>
+                <h1>Добро пожаловать в фотопомянник!</h1>
+                <p className={styles.text}>Похоже, у вас еще не создано ни одного списка. Создайте список, нажав на кнопку "Создать". </p>
+                <Button className={styles.createBtn} type="primary">Создать</Button>
+            </div>
+        </div>
+    );
+}
 
 export default StartPage;

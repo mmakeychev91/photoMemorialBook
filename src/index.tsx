@@ -7,7 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import AppProvider from "./hooks/AppProvider";
 import App from "./components/app/App";
 import "antd/dist/reset.css";
-import "./index.css";
+import "./index.scss";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement

@@ -19,10 +19,23 @@ export default function useToken() {
         setTokenState(null);
     };
 
+    // Новый метод для получения только access_token
+    const getAccessToken = () => {
+        const authData = getToken();
+        return authData?.access_token || null;
+    };
+    // Новый метод для получения только access_token
+    const getRefreshToken = () => {
+        const authData = getToken();
+        return authData?.refresh_token || null;
+    };
+
     return {
         token, // Теперь содержит ВСЕ данные: {access_token, refresh_token и т.д.}
         setToken: saveToken,
         removeToken,
         getToken,
+        getAccessToken,
+        getRefreshToken,
     };
 }
