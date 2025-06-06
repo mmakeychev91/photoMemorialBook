@@ -22,8 +22,9 @@ jobs:
         run: |
           ssh chulpan-app@81.19.136.114 << EOF
             docker ps
+          EOF
+
 #            cd /path/to/your/project
 #            git pull
 #            docker compose -f docker-compose.prod.yml pull
 #            docker compose -f docker-compose.prod.yml up -d --build
-          EOF
