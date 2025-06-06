@@ -11,28 +11,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - uses: webfactory/ssh-agent@v0.8.0
-        with:
-            ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: add host to known_hosts
-        run: ssh-keyscan -t ed25519 81.19.136.114 >> ~/.ssh/known_hosts
-      - name: Build and deploy from docker-compose.yml
+
+      - name: Set up SSH key
         run: |
-#          docker compose -f docker-compose.prod.yml build
-#          docker compose -f docker-compose.prod.yml up -d
-           docker ps
-        env:
-          DOCKER_HOST: ssh://chulpan-app@195.19.105.215
-          TAG_TO_DEPLOY: ${{ github.ref_name }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY_PROD }}
-          CRYPTO_KEY: ${{ secrets.CRYPTO_KEY_PROD }}
-          DSS_LOGIN: ${{ secrets.DSS_LOGIN }}
-          DSS_PASSWORD: ${{ secrets.DSS_PASSWORD }}
-          DSS_API: ${{ secrets.DSS_API }}
-          DSS_REFRESH_TOKEN: ${{ secrets.DSS_REFRESH_TOKEN }}
-          REDIS_HOST:  ${{ secrets.REDIS_HOST }}
-          CELERY_BROKER_URL: ${{ secrets.CELERY_BROKER_URL }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-          GOOGLE_JSON_SECRET: ${{ secrets.GOOGLE_JSON_SECRET_PROD }}
-          SDP_SECRET_KEY: ${{ secrets.SDP_SECRET_KEY_PROD }}
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t ed25519 81.19.136.114 >> ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        run: |
+          ssh chulpan-app@81.19.136.114 << 'EOF'
+            docker ps
+#            cd /path/to/your/project
+#            git pull
+#            docker compose -f docker-compose.prod.yml pull
+#            docker compose -f docker-compose.prod.yml up -d --build
+          EOF
