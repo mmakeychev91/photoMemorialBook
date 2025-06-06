@@ -14,6 +14,7 @@ COPY src ./src
 # 3. Собираем production-версию
 RUN yarn build
 
+# выа
 # Stage 2: Production
 # FROM node:20.10-alpine
 # WORKDIR /usr/app
