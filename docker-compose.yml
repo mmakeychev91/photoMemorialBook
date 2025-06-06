@@ -1,10 +1,10 @@
 services:
-    app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: react_app
-    volumes:
-      - /home/elmir/photopamyannik-statics:/usr/app/build
-    environment:
-      - NODE_ENV=production
+  app:
+  build:
+    context: .
+    dockerfile: Dockerfile
+  container_name: react_app
+  volumes:
+    - /home/elmir/photopamyannik-statics:/usr/app/build
+  environment:
+    - NODE_ENV=production
