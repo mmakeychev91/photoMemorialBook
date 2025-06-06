@@ -1,0 +1,35 @@
+name: build_and_deploy_frontend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install and build React
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
+        run: ssh-keyscan -t ed25519 81.19.136.114 >> ~/.ssh/known_hosts
+
+      - name: Upload build to server
+        run: scp -r ./build/* elmir@81.19.136.114:/home/elmir/photopamyannik-statics
