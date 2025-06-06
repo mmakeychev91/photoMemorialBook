@@ -23,8 +23,7 @@ jobs:
           ssh elmir@81.19.136.114 << EOF
             cd photopamyannik-front
             git pull origin main 
-            ls
-            docker ps
+            docker compose up --build
           EOF
 
 #            cd /path/to/your/project
