@@ -7,9 +7,9 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/scrollbar';
-import styles from "./SliderWrap.module.css";
+import styles from "./slider.module.scss";
 
-const SliderWrap: React.FC = (): JSX.Element => {
+const Slider: React.FC = (): JSX.Element => {
 
   return (
     <Swiper
@@ -28,4 +28,4 @@ const SliderWrap: React.FC = (): JSX.Element => {
   );
 };
 
-export default SliderWrap;  
+export default Slider;  

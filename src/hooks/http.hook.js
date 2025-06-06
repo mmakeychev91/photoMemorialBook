@@ -5,7 +5,6 @@ export const useHttp = () => {
   const axiosInstance = useRef(axios.create({
     // Базовые настройки Axios
     withCredentials: true,
-    timeout: 10000,
   }));
   const refreshTokenRequest = useRef(null);
 
