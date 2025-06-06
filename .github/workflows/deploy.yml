@@ -18,7 +18,6 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -t ed25519 81.19.136.114 >> ~/.ssh/known_hosts
-
       - name: Deploy via SSH
         run: |
           ssh chulpan-app@81.19.136.114 << EOF
