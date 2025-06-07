@@ -1,3 +1,3 @@
-const _baseUrl = 'http://81.19.136.114';
+const _baseUrl = 'https://synodik.ru';
 
 export default _baseUrl;
