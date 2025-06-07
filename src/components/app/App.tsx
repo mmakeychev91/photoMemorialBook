@@ -7,6 +7,24 @@ import { useFoldersService } from "../../services/folders/foldersService";
 import React, { useEffect, useState } from "react";
 
 const App = (): JSX.Element => {
+  useEffect(() => {
+    // Функция для обновления --vh
+    const updateViewportHeight = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+
+    // Устанавливаем начальное значение
+    updateViewportHeight();
+
+    // Добавляем обработчик ресайза
+    window.addEventListener('resize', updateViewportHeight);
+
+    // Удаляем обработчик при размонтировании компонента
+    return () => {
+      window.removeEventListener('resize', updateViewportHeight);
+    };
+  }, []); // Пустой массив зависимостей = выполняется только при монтировании
 
   return (
     <Routes>
