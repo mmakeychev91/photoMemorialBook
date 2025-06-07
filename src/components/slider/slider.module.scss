@@ -1,51 +1,183 @@
 .swiper {
-    height: 100vh;
+  height: 100vh;
+}
+
+.img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 16px;
+}
+
+.text {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  z-index: 0;
+  margin-top: auto;
+  padding: 16px;
+}
+
+.text::after {
+  position: absolute;
+  content: "";
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+  opacity: 0.5;
+  z-index: 1;
+  border-top-right-radius: 16px;
+  border-top-left-radius: 16px;
+}
+
+.text p {
+  position: relative;
+  z-index: 9;
+  font-size: 24px;
+  line-height: 1.2;
+  color: white;
+  margin: 0;
+}
+
+.slide {
+  position: relative;
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: center;
+}
+
+.navButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+
+  &:active {
+    background: rgba(255, 255, 255, 0.7);
+    transform: translateY(-50%) scale(1.05);
   }
-  .img {
-    object-fit: cover;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    border-radius: 16px;
-  }
-  .text {
-    text-align: center;
-    position: relative;
+
+
+}
+
+.navButtonPrev {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  z-index: 1;
+}
+
+.navButtonNext {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  z-index: 1;
+}
+
+.wrap {
+  position: relative;
+}
+
+.anticon {
+  font-size: 18px !important;
+  //filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+}
+
+.burgerMenu {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+.burgerButton {
+  position: relative;
+  border: none;
+  font-size: 20px;
+  color: white;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  
+  :global(.ant-btn-icon)  {
     z-index: 2;
-    width: 100%;
-    z-index: 0;
-    margin-top: auto;
-    padding: 16px;
+
   }
-  .text::after {
+  &:active, &:hover {
+    color: white !important;
+    background: transparent;
+  }
+  &::after {
+    content: '';
+    width: 32px;
+    height: 32px;
     position: absolute;
-    content: "";
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: black;
-    opacity: 0.5;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
     z-index: 1;
-    border-top-right-radius: 16px;
-    border-top-left-radius: 16px;
+    background-color: black;
+    opacity: 0.5;
+    border-radius: 4px;
   }
-  
-  .text p {
-    position: relative;
-    z-index: 9;
-    font-size: 24px;
-    line-height: 1.2;
-    color: white;
-    margin: 0;
+}
+
+.fullscreenMenu {
+  &:global(.ant-drawer-body) {
+    padding: 0;
   }
-  .slide {
-    position: relative;
+
+  .menuHeader {
+    padding: 16px;
     display: flex;
-    justify-content: flex-start;
-    flex-direction: column;
-    align-items: center;
+    justify-content: flex-end;
   }
-  
+
+  .closeButton {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    :global(:where(.css-dev-only-do-not-override-mc1tut).ant-btn) {
+      font-size: 24px;
+    }
+  }
+
+  .menuContent {
+    height: calc(100% - 72px);
+    padding: 16px;
+    border-right: none;
+
+      :global(.ant-menu-item) {
+        height: 60px;
+        line-height: 60px;
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+  }
+}

@@ -40,5 +40,35 @@ export const useFoldersService = () => {
         }
     };
 
-    return { getFolders };
+    // Получение конкретной папки по ID
+    const getFolderById = async (id,retry = true) => {
+        try {
+            return await fetchData({
+                url: `${_baseUrl}/api/folders/${id}/`,
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${getAccessToken()}`,
+                    'Accept': 'application/json'
+                }
+            });
+        } catch (error) {
+            console.log("Ошибка:", error);
+
+            const isUnauthorized = error.message.includes("Could not validate credentials");
+
+            if (isUnauthorized && retry) {
+                try {
+                    await refreshToken();
+                    return await getFolderById(id, false);
+                } catch (refreshError) {
+                    console.error("Не удалось обновить токен:", refreshError.message);
+                    throw refreshError;
+                }
+            }
+            console.error("Ошибка запроса:", error.message);
+            throw error;
+        }
+    };
+
+    return { getFolders, getFolderById };
 };
