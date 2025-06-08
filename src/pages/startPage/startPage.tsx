@@ -1,16 +1,14 @@
 import styles from './startPage.module.scss'
 import { Button } from 'antd';
-import { LogoutOutlined } from '@ant-design/icons';
-import { useAuth } from '../../services/authService';
 import { useFoldersService } from "../../services/folders/foldersService";
 import React, { useEffect, useState } from "react";
 import { Alert, Spin } from "antd";
 import Slider from '../../components/slider/slider';
 import type { Folder } from '../../types'
+import LogoutBtn from '../../components/logoutBtn/logoutBtn';
 
 const StartPage = (): JSX.Element => {
     const { getFolders } = useFoldersService();
-    const { logout } = useAuth();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -49,14 +47,10 @@ const StartPage = (): JSX.Element => {
     return (
         <div className="container">
             <div className={styles.startMessage}>
-                <Button className={styles.logoutBtn}
-                    icon={<LogoutOutlined />}
-                    onClick={logout}
-                >
-                </Button>
                 <h1>Добро пожаловать в фотопомянник!</h1>
                 <p className={styles.text}>Похоже, у вас еще не создано ни одного списка. Создайте список, нажав на кнопку "Создать". </p>
                 <Button className={styles.createBtn} type="primary">Создать</Button>
+                <LogoutBtn/>
             </div>
         </div>
     );

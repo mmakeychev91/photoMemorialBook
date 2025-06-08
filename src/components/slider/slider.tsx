@@ -10,6 +10,7 @@ import { MenuOutlined, CloseOutlined } from '@ant-design/icons';
 import { useRef, useState, useEffect } from 'react';
 import { Button, Menu, Drawer } from 'antd';
 import { useFoldersService } from '../../services/folders/foldersService';
+import LogoutBtn from '../logoutBtn/logoutBtn';
 
 interface Props {
   folders: FoldersArray;
@@ -100,13 +101,15 @@ const Slider: React.FC<Props> = ({ folders }) => {
           onClick={handleMenuClick}
           className={styles.menuContent}
         />
+        <div className={styles.menuFooter}>
+          <LogoutBtn/>
+        </div>
       </Drawer>
 
       {loading ? (
         <div className={styles.loading}>Загрузка...</div>
       ) : (
         <Swiper
-          spaceBetween={50}
           slidesPerView={1}
           scrollbar={{ draggable: true }}
           className={styles.swiper}
