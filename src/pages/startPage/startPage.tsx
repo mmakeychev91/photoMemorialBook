@@ -6,16 +6,15 @@ import { useFoldersService } from "../../services/folders/foldersService";
 import React, { useEffect, useState } from "react";
 import { Alert, Spin } from "antd";
 import Slider from '../../components/slider/slider';
-import type {Folder, FolderDetail} from '../../types'
+import type { Folder } from '../../types'
 
 const StartPage = (): JSX.Element => {
-    const { getFolders, getFolderById } = useFoldersService();
+    const { getFolders } = useFoldersService();
     const { logout } = useAuth();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [folders, setFolders] = useState<Folder[]>([]);
-    const [firstFolderDetail, setFirstFolderDetail] = useState<FolderDetail | null>(null);
     const [hasFolders, setHasFolders] = useState(false);
 
     useEffect(() => {
@@ -35,26 +34,6 @@ const StartPage = (): JSX.Element => {
         fetchFolders();
     }, []);
 
-    useEffect(() => {
-        if (folders.length > 0) {
-            const folderWithMinId = folders.reduce((min, current) => 
-                (current.id < min.id ? current : min), 
-                folders[0]
-            );
-            
-            const fetchMinFolder = async () => {
-                try {
-                    const firstFolderDetailData = await getFolderById(folderWithMinId.id);
-                    setFirstFolderDetail(firstFolderDetailData);
-                    console.log("Folder detail loaded:", firstFolderDetailData);
-                } catch (err) {
-                    console.error('Ошибка при загрузке папки', err);
-                }
-            };
-            fetchMinFolder();
-        }
-    }, [folders]); // Зависимость от folders
-
     if (loading) {
         return <Spin tip="Загрузка..." fullscreen />;
     }
@@ -64,7 +43,7 @@ const StartPage = (): JSX.Element => {
     }
 
     if (hasFolders) {
-        return <Slider cards={firstFolderDetail?.cards || []} currentFolderName={firstFolderDetail?.name || ''} folders={folders}></Slider>;
+        return <Slider folders={folders} />;
     }
 
     return (
