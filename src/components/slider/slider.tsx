@@ -1,27 +1,57 @@
-// Импорт компонентов Swiper
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Swiper as SwiperType } from 'swiper';
 import { A11y } from 'swiper/modules';
-// Импорт стилей Swiper
 import 'swiper/css';
 import 'swiper/css/navigation';
 import styles from "./slider.module.scss";
-import type { Cards } from '../../types'
+import type { Card, FoldersArray } from '../../types';
 import _baseUrl from '../../urlConfiguration';
 import { MenuOutlined, CloseOutlined } from '@ant-design/icons';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { Button, Menu, Drawer } from 'antd';
+import { useFoldersService } from '../../services/folders/foldersService';
 
-const Slider: React.FC<Cards> = ({ cards }): JSX.Element => {
+interface Props {
+  cards: Card[];
+  folders: FoldersArray;
+  currentFolderName: string;
+}
+
+const Slider: React.FC<Props> = ({ cards: initialCards, currentFolderName: initialFolderName, folders }) => {
+  const { getFolderById } = useFoldersService();
   const swiperRef = useRef<SwiperType>();
   const [menuVisible, setMenuVisible] = useState(false);
+  const [currentCards, setCurrentCards] = useState<Card[]>(initialCards);
+  const [currentFolderName, setCurrentFolderName] = useState(initialFolderName);
+  const [loading, setLoading] = useState(false);
 
-  // Меню для бургера
-  const menuItems = [
-    { key: '1', label: 'Главная' },
-    { key: '2', label: 'О нас' },
-    { key: '3', label: 'Контакты' },
-  ];
+  // Находим активный элемент меню
+  const activeMenuItemKey = folders.find(
+    folder => folder.name === currentFolderName
+  )?.id.toString();
+
+  // Преобразуем папки в элементы меню
+  const menuItems = folders.map(folder => ({
+    key: folder.id.toString(),
+    label: folder.name
+  }));
+
+  // Обработчик клика по пункту меню
+  const handleMenuClick = async ({ key }: { key: string }) => {
+    try {
+      setLoading(true);
+      const folderId = parseInt(key);
+      const folderDetail = await getFolderById(folderId);
+      
+      setCurrentCards(folderDetail.cards);
+      setCurrentFolderName(folderDetail.name);
+      setMenuVisible(false);
+    } catch (err) {
+      console.error('Ошибка при загрузке папки', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className={styles.wrap}>
@@ -54,31 +84,39 @@ const Slider: React.FC<Cards> = ({ cards }): JSX.Element => {
         <Menu
           mode="vertical"
           items={menuItems}
+          selectedKeys={activeMenuItemKey ? [activeMenuItemKey] : []}
+          onClick={handleMenuClick}
           className={styles.menuContent}
         />
       </Drawer>
 
-      <Swiper
-        spaceBetween={50}
-        slidesPerView={1}
-        scrollbar={{ draggable: true }}
-        className={styles.swiper}
-      >
-        {cards.map((slide, index) => (
-          <SwiperSlide key={index} className={styles.slide}>
-            <img
-              className={styles.img}
-              src={`${_baseUrl}/${slide.file_path}`}
-              alt={`Фото слайдера: ${slide.description}`}
-            />
-            {slide.description && (
-              <div className={styles.text}>
-                <p>{slide.description}</p>
-              </div>
-            )}
-          </SwiperSlide>
-        ))}
-      </Swiper>
+      {loading ? (
+        <div className={styles.loading}>Загрузка...</div>
+      ) : (
+        <Swiper
+          spaceBetween={50}
+          slidesPerView={1}
+          scrollbar={{ draggable: true }}
+          className={styles.swiper}
+        >
+          {currentCards.map((slide, index) => (
+            <SwiperSlide key={index} className={styles.slide}>
+              {slide.file_path && (
+                <img
+                  className={styles.img}
+                  src={`${_baseUrl}/${slide.file_path}`}
+                  alt={`Фото слайдера: ${slide.description || 'Без описания'}`}
+                />
+              )}
+              {slide.description && (
+                <div className={styles.text}>
+                  <p>{slide.description}</p>
+                </div>
+              )}
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      )}
     </div>
   );
 };

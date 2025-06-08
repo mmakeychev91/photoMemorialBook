@@ -149,41 +149,8 @@
     border-radius: 4px;
   }
 }
-
-.fullscreenMenu {
-  &:global(.ant-drawer-body) {
-    padding: 0;
-  }
-
-  .menuHeader {
-    padding: 16px;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .closeButton {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    :global(:where(.css-dev-only-do-not-override-mc1tut).ant-btn) {
-      font-size: 24px;
-    }
-  }
-
-  .menuContent {
-    height: calc(100% - 72px);
-    padding: 16px;
-    border-right: none;
-
-    :global(.ant-menu-item) {
-      height: 60px;
-      line-height: 60px;
-      font-size: 18px;
-      margin-bottom: 8px;
-    }
-  }
+.menuHeader {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
 }

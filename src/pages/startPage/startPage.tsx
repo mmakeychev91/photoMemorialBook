@@ -64,8 +64,7 @@ const StartPage = (): JSX.Element => {
     }
 
     if (hasFolders) {
-        console.log(firstFolderDetail?.cards)
-        return <Slider cards={firstFolderDetail?.cards || []}></Slider>;
+        return <Slider cards={firstFolderDetail?.cards || []} currentFolderName={firstFolderDetail?.name || ''} folders={folders}></Slider>;
     }
 
     return (
