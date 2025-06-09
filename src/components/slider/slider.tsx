@@ -6,17 +6,22 @@ import 'swiper/css/navigation';
 import styles from "./slider.module.scss";
 import type { Card, FoldersArray, Folder } from '../../types';
 import _baseUrl from '../../urlConfiguration';
-import { MenuOutlined, CloseOutlined } from '@ant-design/icons';
+import { MenuOutlined, CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import { useRef, useState, useEffect } from 'react';
-import { Button, Menu, Drawer } from 'antd';
+import { Button, Menu, Drawer, message, Spin } from 'antd';
 import { useFoldersService } from '../../services/folders/foldersService';
 import LogoutBtn from '../logoutBtn/logoutBtn';
 
 interface Props {
   folders: FoldersArray;
+  onCreateFolder: () => void;
 }
 
-const Slider: React.FC<Props> = ({ folders }) => {
+interface FolderDetail extends Folder {
+  cards: Card[];
+}
+
+const Slider: React.FC<Props> = ({ folders, onCreateFolder }) => {
   const { getFolderById } = useFoldersService();
   const swiperRef = useRef<SwiperType>();
   const [menuVisible, setMenuVisible] = useState(false);
@@ -24,28 +29,38 @@ const Slider: React.FC<Props> = ({ folders }) => {
   const [currentFolderName, setCurrentFolderName] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Находим папку с минимальным ID при первом рендере
+  // Находим папку с минимальным ID при первом рендере и при изменении folders
   useEffect(() => {
     if (folders.length > 0) {
-      const folderWithMinId = folders.reduce((min, current) => 
-        (current.id < min.id ? current : min), 
+      const folderWithMinId = folders.reduce((min, current) =>
+        (current.id < min.id ? current : min),
         folders[0]
       );
-      loadFolder(folderWithMinId.id);
+
+      // Обновляем currentFolderName только если она не совпадает с первой папкой
+      if (currentFolderName !== folderWithMinId.name) {
+        loadFolder(folderWithMinId.id);
+      }
     }
-  }, [folders]);
+  }, [folders]); // Добавляем folders в зависимости
 
   const loadFolder = async (folderId: number) => {
     try {
       setLoading(true);
-      const folderDetail = await getFolderById(folderId);
-      setCurrentCards(folderDetail.cards);
+      const folderDetail = await getFolderById(folderId) as unknown as FolderDetail;
+      setCurrentCards(folderDetail.cards || []);
       setCurrentFolderName(folderDetail.name);
     } catch (err) {
       console.error('Ошибка при загрузке папки', err);
+      message.error('Не удалось загрузить данные папки');
+      setCurrentCards([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAddCard = () => {
+    message.info('Функция добавления карточки будет реализована позже');
   };
 
   // Находим активный элемент меню
@@ -69,9 +84,9 @@ const Slider: React.FC<Props> = ({ folders }) => {
   return (
     <div className={styles.wrap}>
       {/* Кнопка бургер-меню */}
-      <Button 
-        type="text" 
-        icon={<MenuOutlined className={styles.burgerIcon} />} 
+      <Button
+        type="text"
+        icon={<MenuOutlined className={styles.burgerIcon} />}
         className={styles.burgerButton}
         onClick={() => setMenuVisible(true)}
       />
@@ -80,16 +95,16 @@ const Slider: React.FC<Props> = ({ folders }) => {
       <Drawer
         placement="right"
         onClose={() => setMenuVisible(false)}
-        visible={menuVisible}
+        open={menuVisible}
         bodyStyle={{ padding: 0 }}
         headerStyle={{ display: 'none' }}
         width="100%"
         className={styles.fullscreenMenu}
       >
         <div className={styles.menuHeader}>
-          <Button 
-            type="text" 
-            icon={<CloseOutlined />} 
+          <Button
+            type="text"
+            icon={<CloseOutlined />}
             className={styles.closeButton}
             onClick={() => setMenuVisible(false)}
           />
@@ -102,17 +117,45 @@ const Slider: React.FC<Props> = ({ folders }) => {
           className={styles.menuContent}
         />
         <div className={styles.menuFooter}>
-          <LogoutBtn/>
+          <Button
+            className={styles.createBtn}
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              onCreateFolder();
+              setMenuVisible(false); // Закрываем меню после нажатия
+            }}
+          >
+            Создать список
+          </Button>
+          <LogoutBtn />
         </div>
       </Drawer>
 
       {loading ? (
-        <div className={styles.loading}>Загрузка...</div>
+        <Spin tip="Загрузка..." fullscreen />
+      ) : currentCards.length === 0 ? (
+        <div className={styles.emptyState}>
+          <p className={styles.emptyMessage}>Похоже, этот список не содержит карточек</p>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAddCard}
+            className={styles.addButton}
+          >
+            Добавить
+          </Button>
+        </div>
       ) : (
         <Swiper
+          modules={[A11y]}
           slidesPerView={1}
-          scrollbar={{ draggable: true }}
+          onSwiper={(swiper: SwiperType) => swiperRef.current = swiper}
           className={styles.swiper}
+          a11y={{
+            prevSlideMessage: 'Предыдущий слайд',
+            nextSlideMessage: 'Следующий слайд',
+          }}
         >
           {currentCards.map((slide, index) => (
             <SwiperSlide key={index} className={styles.slide}>
@@ -121,6 +164,7 @@ const Slider: React.FC<Props> = ({ folders }) => {
                   className={styles.img}
                   src={`${_baseUrl}/${slide.file_path}`}
                   alt={`Фото слайдера: ${slide.description || 'Без описания'}`}
+                  loading="lazy"
                 />
               )}
               {slide.description && (
