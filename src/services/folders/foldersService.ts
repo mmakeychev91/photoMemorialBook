@@ -154,6 +154,83 @@ export const useFoldersService = () => {
         }
     };
 
+    const createCard = async (
+        folderId: number,
+        description: string,
+        imageFile: File,
+        retry = true
+    ): Promise<any> => {
+        try {
+            // Проверка входных данных
+            if (!description?.trim()) {
+                throw new Error("Описание карточки не может быть пустым");
+            }
+            if (!imageFile) {
+                throw new Error("Необходимо выбрать изображение для карточки");
+            }
+
+            // Подготовка формы с изображением
+            const formData = new FormData();
+            formData.append('image', imageFile);
+
+            // Формирование URL с параметром description
+            const url = new URL(`${_baseUrl}/api/folders/${folderId}/`);
+            url.searchParams.append('description', description);
+
+            // Отправка запроса
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${getAccessToken()}`,
+                    'Accept': 'application/json',
+                },
+                body: formData,
+                credentials: 'include'
+            });
+
+            // Обработка ошибок сервера
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Ошибка сервера:", errorData);
+
+                const error = new Error(errorData.message || "Ошибка при создании карточки");
+                (error as any).response = response;
+                (error as any).data = errorData;
+                throw error;
+            }
+
+            return await response.json();
+
+        } catch (error: any) {
+            console.error("Ошибка при создании карточки:", error);
+
+            // Обработка ошибки валидации (422)
+            if (error.response?.status === 422) {
+                const errorDetails = error.data?.detail;
+                if (Array.isArray(errorDetails)) {
+                    throw new Error(errorDetails[0]?.msg || "Некорректные данные для карточки");
+                }
+                throw new Error("Проверьте введённые данные");
+            }
+
+            // Обработка ошибки авторизации (401)
+            if (error.message.includes("Could not validate credentials") && retry) {
+                try {
+                    await refreshToken();
+                    return await createCard(folderId, description, imageFile, false);
+                } catch (refreshError) {
+                    throw new Error("Сессия устарела. Пожалуйста, войдите снова");
+                }
+            }
+
+            // Общая обработка других ошибок
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error("Неизвестная ошибка при создании карточки");
+        }
+    };
+
     // Вспомогательная функция для проверки типа ошибки API
     function isApiError(error: unknown): error is {
         response: {
@@ -166,5 +243,5 @@ export const useFoldersService = () => {
         return typeof error === 'object' && error !== null && 'response' in error;
     }
 
-    return { getFolders, getFolderById, createFolder };
+    return { getFolders, getFolderById, createFolder, createCard };
 };

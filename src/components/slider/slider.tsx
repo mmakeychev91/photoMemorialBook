@@ -6,7 +6,7 @@ import 'swiper/css/navigation';
 import styles from "./slider.module.scss";
 import type { Card, FoldersArray, Folder } from '../../types';
 import _baseUrl from '../../urlConfiguration';
-import { MenuOutlined, CloseOutlined, PlusOutlined } from '@ant-design/icons';
+import { MenuOutlined, CloseOutlined, PlusOutlined, EditOutlined, DeleteOutlined} from '@ant-design/icons';
 import { useRef, useState, useEffect } from 'react';
 import { Button, Menu, Drawer, message, Spin } from 'antd';
 import { useFoldersService } from '../../services/folders/foldersService';
@@ -15,13 +15,16 @@ import LogoutBtn from '../logoutBtn/logoutBtn';
 interface Props {
   folders: FoldersArray;
   onCreateFolder: () => void;
+  onEditFolder: (folderId: number) => void;
+  onDeleteFolder: (folderId: number) => void;
+  onAddCard: (folderId: number) => void;
 }
 
 interface FolderDetail extends Folder {
   cards: Card[];
 }
 
-const Slider: React.FC<Props> = ({ folders, onCreateFolder }) => {
+const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDeleteFolder, onAddCard }) => {
   const { getFolderById } = useFoldersService();
   const swiperRef = useRef<SwiperType>();
   const [menuVisible, setMenuVisible] = useState(false);
@@ -68,10 +71,40 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder }) => {
     folder => folder.name === currentFolderName
   )?.id.toString();
 
-  // Преобразуем папки в элементы меню
   const menuItems = folders.map(folder => ({
     key: folder.id.toString(),
-    label: folder.name
+    label: (
+      <div className={styles.menuItem}>
+        <span>{folder.name}</span>
+        <div className={styles.actions}>
+          <Button 
+            type="text" 
+            icon={<PlusOutlined />} 
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddCard(folder.id);
+            }}
+          />
+          <Button 
+            type="text" 
+            icon={<EditOutlined />} 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditFolder(folder.id);
+            }}
+          />
+          <Button 
+            type="text" 
+            danger
+            icon={<DeleteOutlined />} 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteFolder(folder.id);
+            }}
+          />
+        </div>
+      </div>
+    ),
   }));
 
   // Обработчик клика по пункту меню

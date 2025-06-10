@@ -196,3 +196,34 @@
 .createBtn {
   width: 100%;
 }
+.menuContent {
+  margin-bottom: 16px;
+}
+.menuItem {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  
+  .actions {
+    button {
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    display: flex;
+    gap: 8px;
+    
+    button {
+      color: rgba(0, 0, 0, 0.45);
+      
+      &:hover {
+        color: rgba(0, 0, 0, 0.85);
+      }
+    }
+  }
+}

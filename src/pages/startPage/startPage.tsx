@@ -63,7 +63,18 @@ const StartPage = (): JSX.Element => {
         <>
             {folders.length > 0 ? (
                 <>
-                    <Slider folders={folders} onCreateFolder={() => setIsModalVisible(true)} />
+                    <Slider onEditFolder={(folderId) => {
+                        // Реализуйте логику редактирования
+                        console.log('Edit folder:', folderId);
+                    }}
+                        onDeleteFolder={(folderId) => {
+                            // Реализуйте логику удаления
+                            console.log('Delete folder:', folderId);
+                        }}
+                        onAddCard={(folderId) => {
+                            // Реализуйте логику добавления карточки
+                            console.log('Add card to folder:', folderId);
+                        }} folders={folders} onCreateFolder={() => setIsModalVisible(true)} />
                 </>
             ) : (
                 <div className={styles.startMessage}>
@@ -85,7 +96,7 @@ const StartPage = (): JSX.Element => {
                 </div>
             )}
 
-            
+
 
             {/* Модальное окно создания папки */}
             <Modal
@@ -106,7 +117,7 @@ const StartPage = (): JSX.Element => {
                         rules={[
                             { required: true, message: 'Введите название' },
                             { min: 2, message: 'Минимум 2 символа' },
-                            { max: 50, message: 'Максимум 50 символов' }
+                            { max: 15, message: 'Максимум 15 символов' }
                         ]}
                     >
                         <Input placeholder="Например: Родственники" />
