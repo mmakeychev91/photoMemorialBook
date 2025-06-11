@@ -1,20 +1,23 @@
 import styles from './startPage.module.scss';
-import { Button, Modal, Form, Input, message, Spin, Alert } from 'antd';
+import { Button, Modal, Form, Input, message, Spin, Alert, Upload } from 'antd';
 import { useFoldersService } from "../../services/folders/foldersService";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Slider from '../../components/slider/slider';
 import type { Folder } from '../../types';
 import LogoutBtn from '../../components/logoutBtn/logoutBtn';
 import { PlusOutlined } from '@ant-design/icons';
 
 const StartPage = (): JSX.Element => {
-    const { getFolders, createFolder } = useFoldersService();
+    const { getFolders, createFolder, createCard } = useFoldersService();
     const [form] = Form.useForm();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [folders, setFolders] = useState<Folder[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isCardModalVisible, setIsCardModalVisible] = useState(false);
+    const [currentFolderId, setCurrentFolderId] = useState<number | null>(null);
+    const [cardForm] = Form.useForm();
 
     useEffect(() => {
         const fetchFolders = async () => {
@@ -51,6 +54,41 @@ const StartPage = (): JSX.Element => {
         }
     };
 
+    const handleAddCard = (folderId: number, afterAdd?: () => void) => {
+        setCurrentFolderId(folderId);
+        setIsCardModalVisible(true);
+        // Если передан колбэк, сохраняем его
+        if (afterAdd) {
+            afterAddCallback.current = afterAdd;
+        }
+    };
+    // Используем useRef для сохранения колбэка
+    const afterAddCallback = useRef<(() => void) | null>(null);
+
+    const handleCreateCard = async () => {
+        try {
+          const values = await cardForm.validateFields();
+      
+          if (currentFolderId) {
+            const imageFile = values.image?.[0]?.originFileObj;
+            await createCard(currentFolderId, values.description, imageFile);
+      
+            message.success('Карточка добавлена!');
+            cardForm.resetFields();
+            setIsCardModalVisible(false);
+      
+            // Вызываем колбэк после успешного добавления
+            if (afterAddCallback.current) {
+              afterAddCallback.current();
+              afterAddCallback.current = null; // Очищаем колбэк
+            }
+          }
+        } catch (err) {
+          message.error(err instanceof Error ? err.message : 'Ошибка при создании карточки');
+          console.error(err);
+        }
+      };
+
     if (loading) {
         return <Spin tip="Загрузка..." fullscreen />;
     }
@@ -63,18 +101,13 @@ const StartPage = (): JSX.Element => {
         <>
             {folders.length > 0 ? (
                 <>
-                    <Slider onEditFolder={(folderId) => {
-                        // Реализуйте логику редактирования
-                        console.log('Edit folder:', folderId);
-                    }}
-                        onDeleteFolder={(folderId) => {
-                            // Реализуйте логику удаления
-                            console.log('Delete folder:', folderId);
-                        }}
-                        onAddCard={(folderId) => {
-                            // Реализуйте логику добавления карточки
-                            console.log('Add card to folder:', folderId);
-                        }} folders={folders} onCreateFolder={() => setIsModalVisible(true)} />
+                    <Slider
+                        onEditFolder={(folderId) => console.log('Edit folder:', folderId)}
+                        onDeleteFolder={(folderId) => console.log('Delete folder:', folderId)}
+                        onAddCard={handleAddCard}
+                        folders={folders}
+                        onCreateFolder={() => setIsModalVisible(true)}
+                    />
                 </>
             ) : (
                 <div className={styles.startMessage}>
@@ -95,6 +128,53 @@ const StartPage = (): JSX.Element => {
                     <LogoutBtn />
                 </div>
             )}
+            {/* Модальное окно создания карточки */}
+            <Modal
+                title={`Добавить карточку в список`}
+                open={isCardModalVisible}
+                onOk={handleCreateCard}
+                onCancel={() => {
+                    setIsCardModalVisible(false);
+                    cardForm.resetFields();
+                }}
+                okText="Добавить"
+                cancelText="Отмена"
+            >
+                <Form form={cardForm} layout="vertical">
+                    <Form.Item
+                        name="description"
+                        label="Описание"
+                        rules={[
+                            { required: true, message: 'Введите описание' },
+                            { min: 2, message: 'Минимум 2 символа' },
+                            { max: 100, message: 'Максимум 100 символов' }
+                        ]}
+                    >
+                        <Input.TextArea
+                            placeholder="Например: Алексея"
+                            rows={4}
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        name="image"
+                        label="Фотография (необязательно)"
+                        valuePropName="fileList"
+                        getValueFromEvent={(e) => e.fileList}
+                    >
+                        <Upload
+                            listType="picture-card"
+                            beforeUpload={() => false} // Отменяем автоматическую загрузку
+                            maxCount={1}
+                            accept="image/*"
+                        >
+                            <div>
+                                <PlusOutlined />
+                                <div style={{ marginTop: 8 }}>Загрузить</div>
+                            </div>
+                        </Upload>
+                    </Form.Item>
+                </Form>
+            </Modal>
 
 
 

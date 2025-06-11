@@ -6,7 +6,7 @@ import 'swiper/css/navigation';
 import styles from "./slider.module.scss";
 import type { Card, FoldersArray, Folder } from '../../types';
 import _baseUrl from '../../urlConfiguration';
-import { MenuOutlined, CloseOutlined, PlusOutlined, EditOutlined, DeleteOutlined} from '@ant-design/icons';
+import { MenuOutlined, CloseOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useRef, useState, useEffect } from 'react';
 import { Button, Menu, Drawer, message, Spin } from 'antd';
 import { useFoldersService } from '../../services/folders/foldersService';
@@ -17,7 +17,8 @@ interface Props {
   onCreateFolder: () => void;
   onEditFolder: (folderId: number) => void;
   onDeleteFolder: (folderId: number) => void;
-  onAddCard: (folderId: number) => void;
+  onAddCard: (folderId: number, afterAdd?: () => void) => void; // Добавляем колбэк
+  loadFolder?: (folderId: number) => void;
 }
 
 interface FolderDetail extends Folder {
@@ -31,6 +32,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   const [currentCards, setCurrentCards] = useState<Card[]>([]);
   const [currentFolderName, setCurrentFolderName] = useState('');
   const [loading, setLoading] = useState(true);
+
 
   // Находим папку с минимальным ID при первом рендере и при изменении folders
   useEffect(() => {
@@ -47,12 +49,15 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
     }
   }, [folders]); // Добавляем folders в зависимости
 
+  const [currentFolderId, setCurrentFolderId] = useState<number | null>(null);
+
   const loadFolder = async (folderId: number) => {
     try {
       setLoading(true);
       const folderDetail = await getFolderById(folderId) as unknown as FolderDetail;
       setCurrentCards(folderDetail.cards || []);
       setCurrentFolderName(folderDetail.name);
+      setCurrentFolderId(folderId); // Сохраняем ID текущей папки
     } catch (err) {
       console.error('Ошибка при загрузке папки', err);
       message.error('Не удалось загрузить данные папки');
@@ -62,8 +67,11 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
     }
   };
 
-  const handleAddCard = () => {
-    message.info('Функция добавления карточки будет реализована позже');
+  const handleEmptyStateAddCard = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (currentFolderId) {
+      onAddCard(currentFolderId, () => loadFolder(currentFolderId)); // Вызываем loadFolder после добавления
+    }
   };
 
   // Находим активный элемент меню
@@ -77,26 +85,26 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       <div className={styles.menuItem}>
         <span>{folder.name}</span>
         <div className={styles.actions}>
-          <Button 
-            type="text" 
-            icon={<PlusOutlined />} 
+          <Button
+            type="text"
+            icon={<PlusOutlined />}
             onClick={(e) => {
               e.stopPropagation();
-              onAddCard(folder.id);
+              onAddCard(folder.id, () => loadFolder(folder.id)); // Передаём колбэк
             }}
           />
-          <Button 
-            type="text" 
-            icon={<EditOutlined />} 
+          <Button
+            type="text"
+            icon={<EditOutlined />}
             onClick={(e) => {
               e.stopPropagation();
               onEditFolder(folder.id);
             }}
           />
-          <Button 
-            type="text" 
+          <Button
+            type="text"
             danger
-            icon={<DeleteOutlined />} 
+            icon={<DeleteOutlined />}
             onClick={(e) => {
               e.stopPropagation();
               onDeleteFolder(folder.id);
@@ -173,7 +181,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={handleAddCard}
+            onClick={handleEmptyStateAddCard}
             className={styles.addButton}
           >
             Добавить
