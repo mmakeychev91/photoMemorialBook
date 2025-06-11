@@ -25,7 +25,7 @@ interface FolderDetail extends Folder {
   cards: Card[];
 }
 
-const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDeleteFolder, onAddCard }) => {
+const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDeleteFolder, onAddCard, }) => {
   const { getFolderById } = useFoldersService();
   const swiperRef = useRef<SwiperType>();
   const [menuVisible, setMenuVisible] = useState(false);

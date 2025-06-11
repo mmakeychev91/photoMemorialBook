@@ -231,6 +231,71 @@ export const useFoldersService = () => {
         }
     };
 
+    const deleteFolder = async (folderId: number, retry = true): Promise<void> => {
+        try {
+            if (!folderId) {
+                throw new Error("ID папки не может быть пустым");
+            }
+
+            const response = await fetch(`${_baseUrl}/api/folders/${folderId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${getAccessToken()}`,
+                    'Accept': 'application/json',
+                },
+                credentials: 'include' // если нужны куки
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Ошибка сервера:", errorData);
+
+                // Создаем ошибку с дополнительной информацией
+                const error = new Error(errorData.message || "Ошибка при удалении папки");
+                (error as any).response = response;
+                (error as any).data = errorData;
+                throw error;
+            }
+
+            // Для DELETE запроса может не быть тела ответа
+            if (response.status !== 204) {
+                return await response.json();
+            }
+        } catch (error: any) {
+            console.error("Ошибка при удалении папки:", error);
+
+            // Обработка ошибки валидации (422)
+            if (error.response?.status === 422) {
+                const errorDetails = error.data?.detail;
+                if (Array.isArray(errorDetails)) {
+                    throw new Error(errorDetails[0]?.msg || "Неверные данные для удаления папки");
+                }
+                throw new Error("Некорректные данные. Проверьте введенные значения");
+            }
+
+            // Обработка ошибки "Не найдено" (404)
+            if (error.response?.status === 404) {
+                throw new Error("Папка не найдена");
+            }
+
+            // Обработка ошибки авторизации (401)
+            if (error.message.includes("Could not validate credentials") && retry) {
+                try {
+                    await refreshToken();
+                    return await deleteFolder(folderId, false);
+                } catch (refreshError) {
+                    throw new Error("Сессия устарела. Пожалуйста, войдите снова");
+                }
+            }
+
+            // Общая обработка других ошибок
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error("Неизвестная ошибка при удалении папки");
+        }
+    };
+
     // Вспомогательная функция для проверки типа ошибки API
     function isApiError(error: unknown): error is {
         response: {
@@ -243,5 +308,5 @@ export const useFoldersService = () => {
         return typeof error === 'object' && error !== null && 'response' in error;
     }
 
-    return { getFolders, getFolderById, createFolder, createCard };
+    return { getFolders, getFolderById, createFolder, createCard,deleteFolder };
 };

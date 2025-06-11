@@ -16,3 +16,7 @@
 .createBtn {
     width: 100%;
 }
+:global(.ant-modal-confirm-btns) {
+    display: flex;
+    justify-content: center;
+}

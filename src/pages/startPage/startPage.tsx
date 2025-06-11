@@ -8,7 +8,7 @@ import LogoutBtn from '../../components/logoutBtn/logoutBtn';
 import { PlusOutlined } from '@ant-design/icons';
 
 const StartPage = (): JSX.Element => {
-    const { getFolders, createFolder, createCard } = useFoldersService();
+    const { getFolders, createFolder, createCard, deleteFolder } = useFoldersService();
     const [form] = Form.useForm();
 
     const [loading, setLoading] = useState(true);
@@ -54,40 +54,64 @@ const StartPage = (): JSX.Element => {
         }
     };
 
+    const handleDeleteFolder = async (folderId: number) => {
+        try {
+            Modal.confirm({
+                title: 'Удалить список?',
+                content: 'Все карточки в этом списке также будут удалены. Это действие нельзя отменить.',
+                okText: 'Удалить',
+                okType: 'danger',
+                cancelText: 'Отмена',
+                onOk: async () => {
+                    try {
+                        await deleteFolder(folderId);
+                        message.success('Список успешно удалён');
+                        
+                        const updatedFolders = await getFolders();
+                        setFolders(updatedFolders);
+                    } catch (err) {
+                        message.error(err instanceof Error ? err.message : 'Ошибка при удалении списка');
+                        console.error(err);
+                    }
+                }
+            });
+        } catch (err) {
+            console.error('Ошибка при удалении папки:', err);
+        }
+    };
+
     const handleAddCard = (folderId: number, afterAdd?: () => void) => {
         setCurrentFolderId(folderId);
         setIsCardModalVisible(true);
-        // Если передан колбэк, сохраняем его
         if (afterAdd) {
             afterAddCallback.current = afterAdd;
         }
     };
-    // Используем useRef для сохранения колбэка
+
     const afterAddCallback = useRef<(() => void) | null>(null);
 
     const handleCreateCard = async () => {
         try {
-          const values = await cardForm.validateFields();
-      
-          if (currentFolderId) {
-            const imageFile = values.image?.[0]?.originFileObj;
-            await createCard(currentFolderId, values.description, imageFile);
-      
-            message.success('Карточка добавлена!');
-            cardForm.resetFields();
-            setIsCardModalVisible(false);
-      
-            // Вызываем колбэк после успешного добавления
-            if (afterAddCallback.current) {
-              afterAddCallback.current();
-              afterAddCallback.current = null; // Очищаем колбэк
+            const values = await cardForm.validateFields();
+        
+            if (currentFolderId) {
+                const imageFile = values.image?.[0]?.originFileObj;
+                await createCard(currentFolderId, values.description, imageFile);
+        
+                message.success('Карточка добавлена!');
+                cardForm.resetFields();
+                setIsCardModalVisible(false);
+        
+                if (afterAddCallback.current) {
+                    afterAddCallback.current();
+                    afterAddCallback.current = null;
+                }
             }
-          }
         } catch (err) {
-          message.error(err instanceof Error ? err.message : 'Ошибка при создании карточки');
-          console.error(err);
+            message.error(err instanceof Error ? err.message : 'Ошибка при создании карточки');
+            console.error(err);
         }
-      };
+    };
 
     if (loading) {
         return <Spin tip="Загрузка..." fullscreen />;
@@ -103,7 +127,7 @@ const StartPage = (): JSX.Element => {
                 <>
                     <Slider
                         onEditFolder={(folderId) => console.log('Edit folder:', folderId)}
-                        onDeleteFolder={(folderId) => console.log('Delete folder:', folderId)}
+                        onDeleteFolder={handleDeleteFolder}
                         onAddCard={handleAddCard}
                         folders={folders}
                         onCreateFolder={() => setIsModalVisible(true)}
@@ -128,6 +152,7 @@ const StartPage = (): JSX.Element => {
                     <LogoutBtn />
                 </div>
             )}
+            
             {/* Модальное окно создания карточки */}
             <Modal
                 title={`Добавить карточку в список`}
@@ -163,7 +188,7 @@ const StartPage = (): JSX.Element => {
                     >
                         <Upload
                             listType="picture-card"
-                            beforeUpload={() => false} // Отменяем автоматическую загрузку
+                            beforeUpload={() => false}
                             maxCount={1}
                             accept="image/*"
                         >
@@ -175,8 +200,6 @@ const StartPage = (): JSX.Element => {
                     </Form.Item>
                 </Form>
             </Modal>
-
-
 
             {/* Модальное окно создания папки */}
             <Modal
