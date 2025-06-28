@@ -296,6 +296,91 @@ export const useFoldersService = () => {
         }
     };
 
+    const updateCard = async (
+        folderId: number,
+        cardId: number,
+        description?: string,
+        imageFile?: File,
+        retry = true
+    ): Promise<any> => {
+        try {
+            // Проверка входных данных
+            if (!description?.trim() && !imageFile) {
+                throw new Error("Необходимо указать новое описание или изображение");
+            }
+
+            // Формируем URL
+            const url = new URL(`${_baseUrl}/api/folders/${folderId}/card/${cardId}`);
+            if (description?.trim()) {
+                url.searchParams.append('description', description);
+            }
+
+            // Подготавливаем FormData для изображения
+            const formData = new FormData();
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            // Получаем токен
+            const token = getAccessToken();
+            if (!token) {
+                throw new Error("Токен доступа не найден");
+            }
+
+            // Отправляем запрос
+            const response = await fetch(url.toString(), {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                },
+                body: imageFile ? formData : undefined,
+                credentials: 'include'
+            });
+
+            // Обрабатываем ответ
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                const errorMessage = errorData.message || `Ошибка ${response.status}`;
+                const error = new Error(errorMessage);
+                (error as any).response = response;
+                throw error;
+            }
+
+            return await response.json();
+
+        } catch (error: unknown) {
+            console.error("Ошибка при обновлении карточки:", error);
+
+            // Обработка ошибки авторизации
+            const isUnauthorized = error instanceof Error &&
+                (error.message.includes("Could not validate credentials") ||
+                    (error as any).response?.status === 401);
+
+            if (isUnauthorized && retry) {
+                try {
+                    await refreshToken();
+                    // Получаем новый токен и повторяем запрос
+                    const newToken = getAccessToken();
+                    if (!newToken) {
+                        throw new Error("Не удалось получить новый токен");
+                    }
+                    return await updateCard(folderId, cardId, description, imageFile, false);
+                } catch (refreshError: unknown) {
+                    console.error("Не удалось обновить токен:",
+                        refreshError instanceof Error ? refreshError.message : 'Unknown error');
+                    throw new Error("Сессия устарела. Пожалуйста, войдите снова");
+                }
+            }
+
+            // Проброс оригинальной ошибки
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error("Неизвестная ошибка при обновлении карточки");
+        }
+    };
+
     // Вспомогательная функция для проверки типа ошибки API
     function isApiError(error: unknown): error is {
         response: {
@@ -308,5 +393,5 @@ export const useFoldersService = () => {
         return typeof error === 'object' && error !== null && 'response' in error;
     }
 
-    return { getFolders, getFolderById, createFolder, createCard,deleteFolder };
+    return { getFolders, getFolderById, createFolder, createCard, deleteFolder, updateCard };
 };

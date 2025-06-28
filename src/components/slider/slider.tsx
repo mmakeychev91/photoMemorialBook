@@ -8,7 +8,7 @@ import type { Card, FoldersArray, Folder } from '../../types';
 import _baseUrl from '../../urlConfiguration';
 import { MenuOutlined, CloseOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useRef, useState, useEffect } from 'react';
-import { Button, Menu, Drawer, message, Spin } from 'antd';
+import { Button, Menu, Drawer, message, Spin, Modal, Form, Input, Upload } from 'antd';
 import { useFoldersService } from '../../services/folders/foldersService';
 import LogoutBtn from '../logoutBtn/logoutBtn';
 
@@ -26,12 +26,15 @@ interface FolderDetail extends Folder {
 }
 
 const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDeleteFolder, onAddCard, }) => {
-  const { getFolderById } = useFoldersService();
+  const { getFolderById, updateCard } = useFoldersService();
   const swiperRef = useRef<SwiperType>();
   const [menuVisible, setMenuVisible] = useState(false);
   const [currentCards, setCurrentCards] = useState<Card[]>([]);
   const [currentFolderName, setCurrentFolderName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [currentCard, setCurrentCard] = useState<Card | null>(null);
+  const [editForm] = Form.useForm();
 
 
   // Находим папку с минимальным ID при первом рендере и при изменении folders
@@ -122,11 +125,50 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
     setMenuVisible(false);
   };
 
+  // Обработчик клика по кнопке редактирования
+  const handleEditCard = () => {
+    if (swiperRef.current && currentCards.length > 0) {
+      const activeIndex = swiperRef.current.activeIndex;
+      const card = currentCards[activeIndex];
+      setCurrentCard(card);
+      editForm.setFieldsValue({
+        description: card.description,
+        image: [] // Очищаем загруженные файлы
+      });
+      setIsEditModalVisible(true);
+    }
+  };
+
+  // Обработчик сохранения изменений
+  const handleUpdateCard = async () => {
+    try {
+      const values = await editForm.validateFields();
+      const imageFile = values.image?.[0]?.originFileObj;
+
+      if (currentFolderId && currentCard) {
+        await updateCard(
+          currentFolderId,
+          currentCard.id,
+          values.description,
+          imageFile
+        );
+
+        message.success('Карточка обновлена!');
+        setIsEditModalVisible(false);
+        loadFolder(currentFolderId); // Перезагружаем данные
+      }
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : 'Ошибка при обновлении');
+      console.error(err);
+    }
+  };/*  */
+
   return (
     <div className={styles.wrap}>
       <Button
         icon={<EditOutlined />}
         className={styles.editCardButton}
+        onClick={handleEditCard}
       />
       {/* Кнопка бургер-меню */}
       <Button
@@ -221,6 +263,53 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           ))}
         </Swiper>
       )}
+      {/* Модальное окно редактирования карточки */}
+      <Modal
+        title="Редактировать карточку"
+        open={isEditModalVisible}
+        onOk={handleUpdateCard}
+        onCancel={() => {
+          setIsEditModalVisible(false);
+          editForm.resetFields();
+        }}
+        okText="Сохранить"
+        cancelText="Отмена"
+      >
+        <Form form={editForm} layout="vertical">
+          <Form.Item
+            name="description"
+            label="Описание"
+            rules={[
+              { required: false, message: 'Введите описание' },
+              { min: 2, message: 'Минимум 2 символа' },
+              { max: 100, message: 'Максимум 100 символов' }
+            ]}
+          >
+            <Input.TextArea
+              placeholder="Например: Алексея"
+              rows={4}
+            />
+          </Form.Item>
+          <Form.Item
+            name="image"
+            label="Новая фотография"
+            valuePropName="fileList"
+            getValueFromEvent={(e) => e.fileList}
+          >
+            <Upload
+              listType="picture-card"
+              beforeUpload={() => false}
+              maxCount={1}
+              accept="image/*"
+            >
+              <div>
+                <PlusOutlined />
+                <div style={{ marginTop: 8 }}>Загрузить</div>
+              </div>
+            </Upload>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
