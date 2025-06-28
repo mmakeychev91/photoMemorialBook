@@ -141,15 +141,11 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   };
 
   const handleUpdateCard = async () => {
-    setIsSubmitting(true);
     try {
       const values = await editForm.validateFields();
       const imageFile = values.image?.[0]?.originFileObj;
 
       if (currentFolderId && currentCard) {
-        // Сохраняем текущую позицию слайда
-        const activeIndex = swiperRef.current?.activeIndex || 0;
-
         await updateCard(
           currentFolderId,
           currentCard.id,
@@ -159,19 +155,12 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
 
         message.success('Карточка обновлена!');
         setIsEditModalVisible(false);
-
-        // После обновления перезагружаем папку
-        await loadFolder(currentFolderId);
-
-        // Восстанавливаем позицию слайда
-        if (swiperRef.current) {
-          swiperRef.current.slideTo(activeIndex);
-        }
+        loadFolder(currentFolderId);
       }
     } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Ошибка при обновлении');
-    } finally {
-      setIsSubmitting(false);
+      const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
+      message.error(`Ошибка обновления: ${errorMessage}`);
+      console.error('Update error:', err);
     }
   };
 
