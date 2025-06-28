@@ -18,6 +18,7 @@ const StartPage = (): JSX.Element => {
     const [isCardModalVisible, setIsCardModalVisible] = useState(false);
     const [currentFolderId, setCurrentFolderId] = useState<number | null>(null);
     const [cardForm] = Form.useForm();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchFolders = async () => {
@@ -66,7 +67,7 @@ const StartPage = (): JSX.Element => {
                     try {
                         await deleteFolder(folderId);
                         message.success('Список успешно удалён');
-                        
+
                         const updatedFolders = await getFolders();
                         setFolders(updatedFolders);
                     } catch (err) {
@@ -91,17 +92,18 @@ const StartPage = (): JSX.Element => {
     const afterAddCallback = useRef<(() => void) | null>(null);
 
     const handleCreateCard = async () => {
+        setIsSubmitting(true);
         try {
             const values = await cardForm.validateFields();
-        
+
             if (currentFolderId) {
                 const imageFile = values.image?.[0]?.originFileObj;
                 await createCard(currentFolderId, values.description, imageFile);
-        
+
                 message.success('Карточка добавлена!');
                 cardForm.resetFields();
                 setIsCardModalVisible(false);
-        
+
                 if (afterAddCallback.current) {
                     afterAddCallback.current();
                     afterAddCallback.current = null;
@@ -110,6 +112,8 @@ const StartPage = (): JSX.Element => {
         } catch (err) {
             message.error(err instanceof Error ? err.message : 'Ошибка при создании карточки');
             console.error(err);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -152,53 +156,75 @@ const StartPage = (): JSX.Element => {
                     <LogoutBtn />
                 </div>
             )}
-            
-            {/* Модальное окно создания карточки */}
+
+            {/* Модальное окно добавления карточки */}
             <Modal
                 title={`Добавить карточку в список`}
                 open={isCardModalVisible}
-                onOk={handleCreateCard}
                 onCancel={() => {
                     setIsCardModalVisible(false);
                     cardForm.resetFields();
                 }}
-                okText="Добавить"
-                cancelText="Отмена"
+                footer={[
+                    <Button
+                        key="cancel"
+                        onClick={() => {
+                            setIsCardModalVisible(false);
+                            cardForm.resetFields();
+                        }}
+                        disabled={isSubmitting}
+                    >
+                        Отмена
+                    </Button>,
+                    <Button
+                        key="submit"
+                        type="primary"
+                        onClick={handleCreateCard}
+                        loading={isSubmitting}
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Добавление...' : 'Добавить'}
+                    </Button>,
+                ]}
             >
-                <Form form={cardForm} layout="vertical">
-                    <Form.Item
-                        name="description"
-                        label="Описание"
-                        rules={[
-                            { required: true, message: 'Введите описание' },
-                            { min: 2, message: 'Минимум 2 символа' },
-                            { max: 100, message: 'Максимум 100 символов' }
-                        ]}
-                    >
-                        <Input.TextArea
-                            placeholder="Например: Алексея"
-                            rows={4}
-                        />
-                    </Form.Item>
-                    <Form.Item
-                        name="image"
-                        label="Фотография (необязательно)"
-                        valuePropName="fileList"
-                        getValueFromEvent={(e) => e.fileList}
-                    >
-                        <Upload
-                            listType="picture-card"
-                            beforeUpload={() => false}
-                            maxCount={1}
-                            accept="image/*"
+                <Spin spinning={isSubmitting} tip="Добавление карточки...">
+                    <Form form={cardForm} layout="vertical" disabled={isSubmitting}>
+                        <Form.Item
+                            name="description"
+                            label="Описание"
+                            rules={[
+                                { required: true, message: 'Введите описание' },
+                                { min: 2, message: 'Минимум 2 символа' },
+                                { max: 100, message: 'Максимум 100 символов' }
+                            ]}
                         >
-                            <div>
-                                <PlusOutlined />
-                                <div style={{ marginTop: 8 }}>Загрузить</div>
-                            </div>
-                        </Upload>
-                    </Form.Item>
-                </Form>
+                            <Input.TextArea
+                                placeholder="Например: Алексея"
+                                rows={4}
+                                disabled={isSubmitting}
+                            />
+                        </Form.Item>
+                        <Form.Item
+                            name="image"
+                            label="Фотография (необязательно)"
+                            valuePropName="fileList"
+                            getValueFromEvent={(e) => e.fileList}
+                        >
+                            <Upload
+                                listType="picture-card"
+                                beforeUpload={() => false}
+                                maxCount={1}
+                                accept="image/*"
+                                disabled={isSubmitting}
+                            >
+                                <div>
+                                    <PlusOutlined />
+                                    <div style={{ marginTop: 8 }}>Загрузить</div>
+                                </div>
+                            </Upload>
+                        </Form.Item>
+                    </Form>
+                </Spin>
             </Modal>
 
             {/* Модальное окно создания папки */}

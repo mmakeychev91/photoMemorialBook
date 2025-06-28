@@ -35,6 +35,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
   const [editForm] = Form.useForm();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 
   // Находим папку с минимальным ID при первом рендере и при изменении folders
@@ -139,13 +140,16 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
     }
   };
 
-  // Обработчик сохранения изменений
   const handleUpdateCard = async () => {
+    setIsSubmitting(true);
     try {
       const values = await editForm.validateFields();
       const imageFile = values.image?.[0]?.originFileObj;
 
       if (currentFolderId && currentCard) {
+        // Сохраняем текущую позицию слайда
+        const activeIndex = swiperRef.current?.activeIndex || 0;
+
         await updateCard(
           currentFolderId,
           currentCard.id,
@@ -155,13 +159,21 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
 
         message.success('Карточка обновлена!');
         setIsEditModalVisible(false);
-        loadFolder(currentFolderId); // Перезагружаем данные
+
+        // После обновления перезагружаем папку
+        await loadFolder(currentFolderId);
+
+        // Восстанавливаем позицию слайда
+        if (swiperRef.current) {
+          swiperRef.current.slideTo(activeIndex);
+        }
       }
     } catch (err) {
       message.error(err instanceof Error ? err.message : 'Ошибка при обновлении');
-      console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
-  };/*  */
+  };
 
   return (
     <div className={styles.wrap}>
@@ -267,48 +279,70 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       <Modal
         title="Редактировать карточку"
         open={isEditModalVisible}
-        onOk={handleUpdateCard}
         onCancel={() => {
           setIsEditModalVisible(false);
           editForm.resetFields();
         }}
-        okText="Сохранить"
-        cancelText="Отмена"
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setIsEditModalVisible(false);
+              editForm.resetFields();
+            }}
+            disabled={isSubmitting}
+          >
+            Отмена
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            onClick={handleUpdateCard}
+            loading={isSubmitting}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Сохранение...' : 'Сохранить'}
+          </Button>,
+        ]}
       >
-        <Form form={editForm} layout="vertical">
-          <Form.Item
-            name="description"
-            label="Описание"
-            rules={[
-              { required: false, message: 'Введите описание' },
-              { min: 2, message: 'Минимум 2 символа' },
-              { max: 100, message: 'Максимум 100 символов' }
-            ]}
-          >
-            <Input.TextArea
-              placeholder="Например: Алексея"
-              rows={4}
-            />
-          </Form.Item>
-          <Form.Item
-            name="image"
-            label="Новая фотография"
-            valuePropName="fileList"
-            getValueFromEvent={(e) => e.fileList}
-          >
-            <Upload
-              listType="picture-card"
-              beforeUpload={() => false}
-              maxCount={1}
-              accept="image/*"
+        <Spin spinning={isSubmitting} tip="Сохранение изменений...">
+          <Form form={editForm} layout="vertical" disabled={isSubmitting}>
+            <Form.Item
+              name="description"
+              label="Описание"
+              rules={[
+                { required: false, message: 'Введите описание' },
+                { min: 2, message: 'Минимум 2 символа' },
+                { max: 100, message: 'Максимум 100 символов' }
+              ]}
             >
-              <div>
-                <PlusOutlined />
-                <div style={{ marginTop: 8 }}>Загрузить</div>
-              </div>
-            </Upload>
-          </Form.Item>
-        </Form>
+              <Input.TextArea
+                placeholder="Например: Алексея"
+                rows={4}
+                disabled={isSubmitting}
+              />
+            </Form.Item>
+            <Form.Item
+              name="image"
+              label="Новая фотография"
+              valuePropName="fileList"
+              getValueFromEvent={(e) => e.fileList}
+            >
+              <Upload
+                listType="picture-card"
+                beforeUpload={() => false}
+                maxCount={1}
+                accept="image/*"
+                disabled={isSubmitting}
+              >
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>Загрузить</div>
+                </div>
+              </Upload>
+            </Form.Item>
+          </Form>
+        </Spin>
       </Modal>
     </div>
   );
