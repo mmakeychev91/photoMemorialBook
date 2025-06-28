@@ -141,6 +141,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   };
 
   const handleUpdateCard = async () => {
+    setIsSubmitting(true)
     try {
       const values = await editForm.validateFields();
       const imageFile = values.image?.[0]?.originFileObj;
@@ -161,6 +162,8 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
       message.error(`Ошибка обновления: ${errorMessage}`);
       console.error('Update error:', err);
+    } finally {
+      setIsSubmitting(false)
     }
   };
 
@@ -294,7 +297,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           </Button>,
         ]}
       >
-        <Spin spinning={isSubmitting} tip="Сохранение изменений...">
+        <Spin spinning={isSubmitting} tip="Обновление карточки...">
           <Form form={editForm} layout="vertical" disabled={isSubmitting}>
             <Form.Item
               name="description"
