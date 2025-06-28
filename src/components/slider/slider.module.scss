@@ -227,3 +227,43 @@
     }
   }
 }
+.editCardButton {
+  position: absolute;
+  z-index: 9;
+  top: 16px;
+  right: calc(16px + 8px + 32px);
+  border: none;
+  background: transparent;
+  color: white;
+  span {
+    position: relative;
+    z-index: 9;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+  &::after {
+    content: '';
+    width: 32px;
+    height: 32px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    background-color: black;
+    opacity: 0.5;
+    border-radius: 4px;
+  }
+  &:active,
+  &:hover {
+    color: white !important;
+    background: transparent !important;
+  }
+}

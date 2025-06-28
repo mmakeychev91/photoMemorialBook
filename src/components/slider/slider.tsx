@@ -124,6 +124,10 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
 
   return (
     <div className={styles.wrap}>
+      <Button
+        icon={<EditOutlined />}
+        className={styles.editCardButton}
+      />
       {/* Кнопка бургер-меню */}
       <Button
         type="text"
