@@ -36,6 +36,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
   const [editForm] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
 
   // Находим папку с минимальным ID при первом рендере и при изменении folders
@@ -62,6 +63,10 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       setCurrentCards(folderDetail.cards || []);
       setCurrentFolderName(folderDetail.name);
       setCurrentFolderId(folderId); // Сохраняем ID текущей папки
+      // После загрузки восстанавливаем позицию слайдера
+      if (swiperRef.current) {
+        swiperRef.current.slideTo(currentSlideIndex);
+      }
     } catch (err) {
       console.error('Ошибка при загрузке папки', err);
       message.error('Не удалось загрузить данные папки');
@@ -130,6 +135,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   const handleEditCard = () => {
     if (swiperRef.current && currentCards.length > 0) {
       const activeIndex = swiperRef.current.activeIndex;
+      setCurrentSlideIndex(activeIndex); // Сохраняем текущую позицию
       const card = currentCards[activeIndex];
       setCurrentCard(card);
       editForm.setFieldsValue({
@@ -243,6 +249,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           slidesPerView={1}
           onSwiper={(swiper: SwiperType) => swiperRef.current = swiper}
           className={styles.swiper}
+          initialSlide={currentSlideIndex} // Добавьте это
           a11y={{
             prevSlideMessage: 'Предыдущий слайд',
             nextSlideMessage: 'Следующий слайд',
