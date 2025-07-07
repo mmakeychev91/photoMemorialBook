@@ -11,6 +11,7 @@ import { useRef, useState, useEffect } from 'react';
 import { Button, Menu, Drawer, message, Spin, Modal, Form, Input, Upload } from 'antd';
 import { useFoldersService } from '../../services/folders/foldersService';
 import LogoutBtn from '../logoutBtn/logoutBtn';
+import { Skeleton } from 'antd';
 
 interface Props {
   folders: FoldersArray;
@@ -36,6 +37,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
   const [editForm] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
 
   // Находим папку с минимальным ID при первом рендере и при изменении folders
@@ -59,9 +61,18 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
     try {
       setLoading(true);
       const folderDetail = await getFolderById(folderId) as unknown as FolderDetail;
-      setCurrentCards(folderDetail.cards || []);
+      // Сортируем карточки по id (или другому полю)
+      const sortedCards = [...(folderDetail.cards || [])].sort((a, b) => a.id - b.id);
+
+      setCurrentCards(sortedCards);
       setCurrentFolderName(folderDetail.name);
       setCurrentFolderId(folderId); // Сохраняем ID текущей папки
+      // Восстанавливаем позицию слайда после загрузки
+      setTimeout(() => {
+        if (swiperRef.current) {
+          swiperRef.current.slideTo(currentSlideIndex);
+        }
+      }, 0);
     } catch (err) {
       console.error('Ошибка при загрузке папки', err);
       message.error('Не удалось загрузить данные папки');
@@ -122,6 +133,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   // Обработчик клика по пункту меню
   const handleMenuClick = async ({ key }: { key: string }) => {
     const folderId = parseInt(key);
+    setCurrentSlideIndex(0); // Сбрасываем индекс при смене папки
     await loadFolder(folderId);
     setMenuVisible(false);
   };
@@ -141,13 +153,14 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   };
 
   const handleUpdateCard = async () => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
+      const activeIndex = swiperRef.current?.activeIndex || 0;
       const values = await editForm.validateFields();
       const imageFile = values.image?.[0]?.originFileObj;
 
       if (currentFolderId && currentCard) {
-        await updateCard(
+        const updatedCard = await updateCard(
           currentFolderId,
           currentCard.id,
           values.description,
@@ -156,14 +169,29 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
 
         message.success('Карточка обновлена!');
         setIsEditModalVisible(false);
-        loadFolder(currentFolderId);
+
+        // Обновляем только измененную карточку, сохраняя порядок
+        setCurrentCards(prevCards =>
+          prevCards.map(card =>
+            card.id === currentCard.id
+              ? { ...card, ...updatedCard }
+              : card
+          )
+        );
+
+        // Возвращаемся на тот же слайд
+        setTimeout(() => {
+          if (swiperRef.current) {
+            swiperRef.current.slideTo(activeIndex);
+          }
+        }, 0);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
       message.error(`Ошибка обновления: ${errorMessage}`);
       console.error('Update error:', err);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   };
 
@@ -224,7 +252,14 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       </Drawer>
 
       {loading ? (
-        <Spin tip="Загрузка..." fullscreen />
+
+
+        <div className={styles.skeletonWrapper}>
+          <div className={styles.skeletonSlide}>
+            <Skeleton.Image active className={styles.skeletonImage} />
+          </div>
+        </div>
+
       ) : currentCards.length === 0 ? (
         <div className={styles.emptyState}>
           <p className={styles.emptyMessage}>Похоже, этот список не содержит карточек</p>
@@ -242,6 +277,8 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           modules={[A11y]}
           slidesPerView={1}
           onSwiper={(swiper: SwiperType) => swiperRef.current = swiper}
+          // @ts-ignore
+          onSlideChange={(swiper) => setCurrentSlideIndex(swiper.activeIndex)}
           className={styles.swiper}
           a11y={{
             prevSlideMessage: 'Предыдущий слайд',

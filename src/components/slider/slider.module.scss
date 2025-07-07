@@ -193,12 +193,15 @@
 .addButton {
   width: 100%;
 }
+
 .createBtn {
   width: 100%;
 }
+
 .menuContent {
   margin-bottom: 16px;
 }
+
 .menuItem {
   display: flex;
   flex-wrap: wrap;
@@ -206,7 +209,7 @@
   align-items: center;
   width: 100%;
   gap: 8px;
-  
+
   .actions {
     button {
       width: 24px;
@@ -215,18 +218,20 @@
       align-items: center;
       justify-content: center;
     }
+
     display: flex;
     gap: 8px;
-    
+
     button {
       color: rgba(0, 0, 0, 0.45);
-      
+
       &:hover {
         color: rgba(0, 0, 0, 0.85);
       }
     }
   }
 }
+
 .editCardButton {
   position: absolute;
   z-index: 9;
@@ -235,6 +240,7 @@
   border: none;
   background: transparent;
   color: white;
+
   span {
     position: relative;
     z-index: 9;
@@ -243,11 +249,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
     svg {
       width: 20px;
       height: 20px;
     }
   }
+
   &::after {
     content: '';
     width: 32px;
@@ -261,9 +269,48 @@
     opacity: 0.5;
     border-radius: 4px;
   }
+
   &:active,
   &:hover {
     color: white !important;
     background: transparent !important;
+  }
+}
+
+.skeletonWrapper {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05); // легкий фон для контраста
+}
+
+.skeletonSlide {
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+  aspect-ratio: 16/9;
+  display: flex;
+  justify-content: center;
+}
+
+.skeletonImage {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 16px; // убираем скругление для полного экрана
+
+  .ant-skeleton-image {
+    width: 100%;
+    height: 100%;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
   }
 }
