@@ -38,6 +38,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   const [editForm] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
 
 
   // Находим папку с минимальным ID при первом рендере и при изменении folders
@@ -286,20 +287,21 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           }}
         >
           {currentCards.map((slide, index) => (
-            <SwiperSlide key={index} className={styles.slide}>
-              {slide.file_path && (
-                <img
-                  className={styles.img}
-                  src={`${_baseUrl}/${slide.file_path}`}
-                  alt={`Фото слайдера: ${slide.description || 'Без описания'}`}
-                  loading="lazy"
-                />
-              )}
-              {slide.description && (
-                <div className={styles.text}>
-                  <p>{slide.description}</p>
+            <SwiperSlide key={index}>
+              {!loadedImages[index] && (
+                <div className={styles.skeletonWrapper}>
+                  <div className={styles.skeletonSlide}>
+                    <Skeleton.Image active className={styles.skeletonImage} />
+                  </div>
                 </div>
               )}
+              <img
+                className={styles.img}
+                style={{ display: loadedImages[index] ? 'block' : 'none' }}
+                src={`${_baseUrl}/${slide.file_path}`}
+                onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
+                onError={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
+              />
             </SwiperSlide>
           ))}
         </Swiper>
