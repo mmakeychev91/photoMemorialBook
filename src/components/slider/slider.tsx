@@ -289,10 +289,11 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           {currentCards.map((slide, index) => (
             <SwiperSlide key={index} className={styles.slide}>
               {!loadedImages[index] && (
-                <Skeleton.Image
-                  active
-                  className={styles.imgSkeleton}
-                />
+                <div className={styles.skeletonWrapper}>
+                  <div className={styles.skeletonSlide}>
+                    <Skeleton.Image active className={styles.skeletonImage} />
+                  </div>
+                </div>
               )}
               <img
                 className={styles.img}
