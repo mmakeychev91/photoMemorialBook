@@ -287,13 +287,12 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           }}
         >
           {currentCards.map((slide, index) => (
-            <SwiperSlide key={index}>
+            <SwiperSlide key={index} className={styles.slide}>
               {!loadedImages[index] && (
-                <div className={styles.skeletonWrapper}>
-                  <div className={styles.skeletonSlide}>
-                    <Skeleton.Image active className={styles.skeletonImage} />
-                  </div>
-                </div>
+                <Skeleton.Image
+                  active
+                  className={styles.imgSkeleton}
+                />
               )}
               <img
                 className={styles.img}
@@ -302,6 +301,11 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
                 onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
                 onError={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
               />
+              {slide.description && (
+                <div className={styles.text}>
+                  <p>{slide.description}</p>
+                </div>
+              )}
             </SwiperSlide>
           ))}
         </Swiper>
