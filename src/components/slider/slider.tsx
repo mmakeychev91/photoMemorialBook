@@ -301,6 +301,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
                 src={`${_baseUrl}/${slide.file_path}`}
                 onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
                 onError={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
+                loading="lazy"
               />
               {slide.description && (
                 <div className={styles.text}>
