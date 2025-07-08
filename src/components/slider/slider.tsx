@@ -168,7 +168,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           imageFile
         );
 
-        message.success('Карточка обновлена!');
+        message.success('Карточка обновляется...');
         setIsEditModalVisible(false);
 
         // Обновляем только измененную карточку, сохраняя порядок
