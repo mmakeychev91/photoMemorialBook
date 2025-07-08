@@ -288,24 +288,14 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
         >
           {currentCards.map((slide, index) => (
             <SwiperSlide key={index} className={styles.slide}>
-              <div className={styles.skeletonWrapper} style={{ display: loadedImages[index] ? 'none' : 'block' }}>
-                <div className={styles.skeletonSlide}>
-                  <Skeleton.Image active className={styles.skeletonImage} />
-                </div>
-              </div>
-              {/* Изображение - всегда в DOM */}
-              <img
-                className={styles.img}
-                style={{
-                  opacity: loadedImages[index] ? 1 : 0,
-                  transition: 'opacity 0.3s ease',
-                }}
-                src={`${_baseUrl}/${slide.file_path}`}
-                loading="lazy"
-                onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
-                onError={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
-                alt={slide.description || ''}
-              />
+              {slide.file_path && (
+                <img
+                  className={styles.img}
+                  src={`${_baseUrl}/${slide.file_path}`}
+                  alt={`Загрузка фото...`}
+                  loading="lazy"
+                />
+              )}
               {slide.description && (
                 <div className={styles.text}>
                   <p>{slide.description}</p>
