@@ -60,6 +60,86 @@ export const useFoldersService = () => {
         }
     };
 
+    const deleteCard = async (
+        folderId: number,
+        cardId: number,
+        retry = true
+    ): Promise<void> => {
+        try {
+            if (!folderId || !cardId) {
+                throw new Error("Не указан ID папки или карточки");
+            }
+    
+            const response = await fetch(`${_baseUrl}/api/folders/${folderId}/card/${cardId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${getAccessToken()}`,
+                    'Accept': 'application/json',
+                },
+                credentials: 'include'
+            });
+    
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error("Ошибка сервера:", errorData);
+    
+                // Создаем кастомную ошибку с response
+                const error = new Error(errorData.message || "Ошибка при удалении карточки") as ApiError;
+                error.response = {
+                    status: response.status,
+                    data: errorData
+                };
+                throw error;
+            }
+    
+            // Для DELETE запроса может не быть тела ответа
+            if (response.status !== 204) {
+                await response.json();
+            }
+        } catch (error: unknown) {
+            console.error("Ошибка при удалении карточки:", error);
+    
+            // Проверяем тип ошибки
+            if (isApiError(error)) {
+                // Обработка ошибки "Не найдено" (404)
+                if (error.response.status === 404) {
+                    throw new Error("Карточка не найдена");
+                }
+    
+                // Обработка ошибки авторизации (401)
+                if (error.response.status === 401 && retry) {
+                    try {
+                        await refreshToken();
+                        // Получаем новый токен и повторяем запрос
+                        const newToken = getAccessToken();
+                        if (!newToken) {
+                            throw new Error("Не удалось получить новый токен");
+                        }
+                        return await deleteCard(folderId, cardId, false);
+                    } catch (refreshError) {
+                        throw new Error("Сессия устарела. Пожалуйста, войдите снова");
+                    }
+                }
+            }
+    
+            // Проверяем сообщение об ошибке для случая, когда нет response
+            if (error instanceof Error && error.message.includes("Could not validate credentials") && retry) {
+                try {
+                    await refreshToken();
+                    return await deleteCard(folderId, cardId, false);
+                } catch (refreshError) {
+                    throw new Error("Сессия устарела. Пожалуйста, войдите снова");
+                }
+            }
+    
+            // Проброс оригинальной ошибки
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error("Неизвестная ошибка при удалении карточки");
+        }
+    };
+
     const getFolderById = async (id: number, retry = true): Promise<Folder> => {
         try {
             return await fetchData({
@@ -157,21 +237,20 @@ export const useFoldersService = () => {
     const createCard = async (
         folderId: number,
         description: string,
-        imageFile: File,
+        imageFile?: File,  // Сделали необязательным
         retry = true
     ): Promise<any> => {
         try {
-            // Проверка входных данных
+            // Проверка входных данных (только description обязателен)
             if (!description?.trim()) {
                 throw new Error("Описание карточки не может быть пустым");
             }
-            if (!imageFile) {
-                throw new Error("Необходимо выбрать изображение для карточки");
-            }
 
-            // Подготовка формы с изображением
+            // Подготовка формы (только если есть изображение)
             const formData = new FormData();
-            formData.append('image', imageFile);
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
 
             // Формирование URL с параметром description
             const url = new URL(`${_baseUrl}/api/folders/${folderId}/`);
@@ -184,11 +263,11 @@ export const useFoldersService = () => {
                     'Authorization': `Bearer ${getAccessToken()}`,
                     'Accept': 'application/json',
                 },
-                body: formData,
+                body: imageFile ? formData : undefined,  // Отправляем formData только если есть изображение
                 credentials: 'include'
             });
 
-            // Обработка ошибок сервера
+            // Остальной код обработки ответа остаётся без изменений
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error("Ошибка сервера:", errorData);
@@ -204,7 +283,6 @@ export const useFoldersService = () => {
         } catch (error: any) {
             console.error("Ошибка при создании карточки:", error);
 
-            // Обработка ошибки валидации (422)
             if (error.response?.status === 422) {
                 const errorDetails = error.data?.detail;
                 if (Array.isArray(errorDetails)) {
@@ -213,7 +291,6 @@ export const useFoldersService = () => {
                 throw new Error("Проверьте введённые данные");
             }
 
-            // Обработка ошибки авторизации (401)
             if (error.message.includes("Could not validate credentials") && retry) {
                 try {
                     await refreshToken();
@@ -223,7 +300,6 @@ export const useFoldersService = () => {
                 }
             }
 
-            // Общая обработка других ошибок
             if (error instanceof Error) {
                 throw error;
             }
@@ -393,5 +469,5 @@ export const useFoldersService = () => {
         return typeof error === 'object' && error !== null && 'response' in error;
     }
 
-    return { getFolders, getFolderById, createFolder, createCard, deleteFolder, updateCard };
+    return { getFolders, getFolderById, createFolder, createCard, deleteFolder, updateCard, deleteCard };
 };

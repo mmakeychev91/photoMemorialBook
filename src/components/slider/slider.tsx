@@ -27,7 +27,7 @@ interface FolderDetail extends Folder {
 }
 
 const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDeleteFolder, onAddCard, }) => {
-  const { getFolderById, updateCard } = useFoldersService();
+  const { getFolderById, updateCard, deleteCard } = useFoldersService();
   const swiperRef = useRef<SwiperType>();
   const [menuVisible, setMenuVisible] = useState(false);
   const [currentCards, setCurrentCards] = useState<Card[]>([]);
@@ -131,6 +131,41 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
     ),
   }));
 
+  const handleDeleteCard = async () => {
+    if (!currentCard || !currentFolderId) return;
+
+    try {
+      Modal.confirm({
+        title: 'Удалить карточку?',
+        content: 'Это действие нельзя отменить.',
+        okText: 'Удалить',
+        okType: 'danger',
+        cancelText: 'Отмена',
+        onOk: async () => {
+          await deleteCard(currentFolderId, currentCard.id);
+          message.success('Карточка удалена!');
+
+          // Обновляем список карточек
+          const updatedCards = currentCards.filter(card => card.id !== currentCard.id);
+          setCurrentCards(updatedCards);
+
+          // Закрываем модальное окно
+          setIsEditModalVisible(false);
+
+          // Если карточек не осталось, показываем пустое состояние
+          if (updatedCards.length === 0) {
+            setCurrentSlideIndex(0);
+          } else if (swiperRef.current) {
+            // Возвращаемся к предыдущему слайду, если возможно
+            swiperRef.current.slideTo(Math.min(currentSlideIndex, updatedCards.length - 1));
+          }
+        }
+      });
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : 'Ошибка при удалении карточки');
+      console.error(err);
+    }
+  };
   // Обработчик клика по пункту меню
   const handleMenuClick = async ({ key }: { key: string }) => {
     const folderId = parseInt(key);
@@ -314,6 +349,14 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           editForm.resetFields();
         }}
         footer={[
+          <Button
+            key="delete"
+            danger
+            onClick={handleDeleteCard}
+            disabled={isSubmitting}
+          >
+            Удалить
+          </Button>,
           <Button
             key="cancel"
             onClick={() => {
