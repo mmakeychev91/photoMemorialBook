@@ -80,3 +80,6 @@ h1,h2,h3,h4,h5,h6,ul,ol,li,p, a {
 .app, .main {
   height: 100%;
 }
+.ant-modal-wrap, .ant-modal-mask {
+  z-index: 1001 !important;
+}
