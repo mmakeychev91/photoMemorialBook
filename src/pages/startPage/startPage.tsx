@@ -8,7 +8,7 @@ import LogoutBtn from '../../components/logoutBtn/logoutBtn';
 import { PlusOutlined } from '@ant-design/icons';
 
 const StartPage = (): JSX.Element => {
-    const { getFolders, createFolder, createCard, deleteFolder } = useFoldersService();
+    const { getFolders, createFolder, createCard, deleteFolder, updateFolder } = useFoldersService();
     const [form] = Form.useForm();
 
     const [loading, setLoading] = useState(true);
@@ -19,6 +19,10 @@ const StartPage = (): JSX.Element => {
     const [currentFolderId, setCurrentFolderId] = useState<number | null>(null);
     const [cardForm] = Form.useForm();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isEditFolderModalVisible, setIsEditFolderModalVisible] = useState(false);
+    const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
+    const [editFolderForm] = Form.useForm();
+    const [isUpdatingFolder, setIsUpdatingFolder] = useState(false);
 
     useEffect(() => {
         const fetchFolders = async () => {
@@ -35,6 +39,49 @@ const StartPage = (): JSX.Element => {
         };
         fetchFolders();
     }, []);
+
+    // Add this function to handle folder editing
+    const handleEditFolder = async (folderId: number) => {
+        try {
+            const folderToEdit = folders.find(folder => folder.id === folderId);
+            if (folderToEdit) {
+                setEditingFolder(folderToEdit);
+                editFolderForm.setFieldsValue({ name: folderToEdit.name });
+                setIsEditFolderModalVisible(true);
+            }
+        } catch (err) {
+            message.error('Не удалось загрузить данные списка для редактирования');
+            console.error(err);
+        }
+    };
+
+    const handleUpdateFolder = async () => {
+        setIsUpdatingFolder(true);
+        try {
+            const values = await editFolderForm.validateFields();
+            if (!editingFolder) return;
+
+            const updatedFolder = await updateFolder(editingFolder.id, values.name);
+
+            message.success(`Название изменилось!`);
+            setFolders(prev =>
+                prev.map(folder =>
+                    folder.id === updatedFolder.id ? updatedFolder : folder
+                )
+            );
+            editFolderForm.resetFields();
+            setIsEditFolderModalVisible(false);
+        } catch (err) {
+            if (err instanceof Error) {
+                message.error(err.message);
+            } else {
+                message.error("Не удалось обновить список");
+                console.error("Unknown error:", err);
+            }
+        } finally {
+            setIsUpdatingFolder(false);
+        }
+    };
 
     const handleCreateFolder = async () => {
         try {
@@ -130,7 +177,7 @@ const StartPage = (): JSX.Element => {
             {folders.length > 0 ? (
                 <>
                     <Slider
-                        onEditFolder={(folderId) => console.log('Edit folder:', folderId)}
+                        onEditFolder={handleEditFolder}
                         onDeleteFolder={handleDeleteFolder}
                         onAddCard={handleAddCard}
                         folders={folders}
@@ -240,6 +287,48 @@ const StartPage = (): JSX.Element => {
                 cancelText="Отмена"
             >
                 <Form form={form} layout="vertical">
+                    <Form.Item
+                        name="name"
+                        label="Название списка"
+                        rules={[
+                            { required: true, message: 'Введите название' },
+                            { min: 2, message: 'Минимум 2 символа' },
+                            { max: 15, message: 'Максимум 15 символов' }
+                        ]}
+                    >
+                        <Input placeholder="Например: Родственники" />
+                    </Form.Item>
+                </Form>
+            </Modal>
+            {/* Edit Folder Modal */}
+            <Modal
+                title="Редактировать список"
+                open={isEditFolderModalVisible}
+                onCancel={() => {
+                    setIsEditFolderModalVisible(false);
+                    editFolderForm.resetFields();
+                }}
+                footer={[
+                    <Button
+                        key="cancel"
+                        onClick={() => {
+                            setIsEditFolderModalVisible(false);
+                            editFolderForm.resetFields();
+                        }}
+                    >
+                        Отмена
+                    </Button>,
+                    <Button
+                        key="submit"
+                        type="primary"
+                        onClick={handleUpdateFolder}
+                        loading={isUpdatingFolder}
+                    >
+                        {isUpdatingFolder ? 'Сохранение...' : 'Сохранить'}
+                    </Button>
+                ]}
+            >
+                <Form form={editFolderForm} layout="vertical">
                     <Form.Item
                         name="name"
                         label="Название списка"

@@ -349,14 +349,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           editForm.resetFields();
         }}
         footer={[
-          <Button
-            key="delete"
-            danger
-            onClick={handleDeleteCard}
-            disabled={isSubmitting}
-          >
-            Удалить
-          </Button>,
+          ,
           <Button
             key="cancel"
             onClick={() => {
@@ -366,6 +359,14 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
             disabled={isSubmitting}
           >
             Отмена
+          </Button>,
+          <Button
+            key="delete"
+            danger
+            onClick={handleDeleteCard}
+            disabled={isSubmitting}
+          >
+            Удалить
           </Button>,
           <Button
             key="submit"

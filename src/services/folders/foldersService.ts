@@ -27,6 +27,75 @@ export const useFoldersService = () => {
     const { getAccessToken } = useToken();
     const { refreshToken } = useAuth();
 
+    const updateFolder = async (folderId: number, newName: string, retry = true): Promise<Folder> => {
+        try {
+            if (!folderId) {
+                throw new Error("ID папки не может быть пустым");
+            }
+            if (!newName?.trim()) {
+                throw new Error("Название папки не может быть пустым");
+            }
+
+            const response = await fetch(`${_baseUrl}/api/folders/${folderId}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${getAccessToken()}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: newName
+                }),
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Ошибка сервера:", errorData);
+
+                // Создаем ошибку с дополнительной информацией
+                const error = new Error(errorData.message || "Ошибка при обновлении папки");
+                (error as any).response = response;
+                (error as any).data = errorData;
+                throw error;
+            }
+
+            return await response.json();
+        } catch (error: any) {
+            console.error("Ошибка при обновлении папки:", error);
+
+            // Обработка ошибки валидации (422)
+            if (error.response?.status === 422) {
+                const errorDetails = error.data?.detail;
+                if (Array.isArray(errorDetails)) {
+                    throw new Error(errorDetails[0]?.msg || "Неверные данные для обновления папки");
+                }
+                throw new Error("Некорректные данные. Проверьте введенные значения");
+            }
+
+            // Обработка ошибки "Не найдено" (404)
+            if (error.response?.status === 404) {
+                throw new Error("Папка не найдена");
+            }
+
+            // Обработка ошибки авторизации (401)
+            if (error.message.includes("Could not validate credentials") && retry) {
+                try {
+                    await refreshToken();
+                    return await updateFolder(folderId, newName, false);
+                } catch (refreshError) {
+                    throw new Error("Сессия устарела. Пожалуйста, войдите снова");
+                }
+            }
+
+            // Общая обработка других ошибок
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error("Неизвестная ошибка при обновлении папки");
+        }
+    };
+
     const getFolders = async (retry = true): Promise<Folder[]> => {
         try {
             return await fetchData({
@@ -69,7 +138,7 @@ export const useFoldersService = () => {
             if (!folderId || !cardId) {
                 throw new Error("Не указан ID папки или карточки");
             }
-    
+
             const response = await fetch(`${_baseUrl}/api/folders/${folderId}/card/${cardId}`, {
                 method: 'DELETE',
                 headers: {
@@ -78,11 +147,11 @@ export const useFoldersService = () => {
                 },
                 credentials: 'include'
             });
-    
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 console.error("Ошибка сервера:", errorData);
-    
+
                 // Создаем кастомную ошибку с response
                 const error = new Error(errorData.message || "Ошибка при удалении карточки") as ApiError;
                 error.response = {
@@ -91,21 +160,21 @@ export const useFoldersService = () => {
                 };
                 throw error;
             }
-    
+
             // Для DELETE запроса может не быть тела ответа
             if (response.status !== 204) {
                 await response.json();
             }
         } catch (error: unknown) {
             console.error("Ошибка при удалении карточки:", error);
-    
+
             // Проверяем тип ошибки
             if (isApiError(error)) {
                 // Обработка ошибки "Не найдено" (404)
                 if (error.response.status === 404) {
                     throw new Error("Карточка не найдена");
                 }
-    
+
                 // Обработка ошибки авторизации (401)
                 if (error.response.status === 401 && retry) {
                     try {
@@ -121,7 +190,7 @@ export const useFoldersService = () => {
                     }
                 }
             }
-    
+
             // Проверяем сообщение об ошибке для случая, когда нет response
             if (error instanceof Error && error.message.includes("Could not validate credentials") && retry) {
                 try {
@@ -131,7 +200,7 @@ export const useFoldersService = () => {
                     throw new Error("Сессия устарела. Пожалуйста, войдите снова");
                 }
             }
-    
+
             // Проброс оригинальной ошибки
             if (error instanceof Error) {
                 throw error;
@@ -469,5 +538,5 @@ export const useFoldersService = () => {
         return typeof error === 'object' && error !== null && 'response' in error;
     }
 
-    return { getFolders, getFolderById, createFolder, createCard, deleteFolder, updateCard, deleteCard };
+    return { getFolders, getFolderById, createFolder, createCard, deleteFolder, updateCard, deleteCard, updateFolder };
 };
