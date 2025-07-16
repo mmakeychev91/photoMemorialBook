@@ -18,15 +18,16 @@ interface Props {
   onCreateFolder: () => void;
   onEditFolder: (folderId: number) => void;
   onDeleteFolder: (folderId: number) => void;
-  onAddCard: (folderId: number, afterAdd?: () => void) => void; // Добавляем колбэк
-  loadFolder?: (folderId: number) => void;
+  onAddCard: (folderId: number, afterAdd?: () => void) => void;
+  currentFolderId?: number;  // Делаем необязательным
+  setCurrentFolderId: (id: number) => void; 
 }
 
 interface FolderDetail extends Folder {
   cards: Card[];
 }
 
-const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDeleteFolder, onAddCard, }) => {
+const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDeleteFolder, onAddCard, currentFolderId, setCurrentFolderId }) => {
   const { getFolderById, updateCard, deleteCard } = useFoldersService();
   const swiperRef = useRef<SwiperType>();
   const [menuVisible, setMenuVisible] = useState(false);
@@ -41,34 +42,32 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
 
 
-  // Находим папку с минимальным ID при первом рендере и при изменении folders
   useEffect(() => {
-    if (folders.length > 0) {
-      const folderWithMinId = folders.reduce((min, current) =>
-        (current.id < min.id ? current : min),
-        folders[0]
-      );
-
-      // Обновляем currentFolderName только если она не совпадает с первой папкой
-      if (currentFolderName !== folderWithMinId.name) {
-        loadFolder(folderWithMinId.id);
+    if (folders.length > 0 && currentFolderId) {
+      // Загружаем текущую папку, если она существует
+      if (folders.some(f => f.id === currentFolderId)) {
+        loadFolder(currentFolderId);
+      } else {
+        // Если текущей папки нет (например, была удалена), загружаем первую
+        loadFolder(folders[0].id);
+        setCurrentFolderId(folders[0].id);
       }
+    } else if (folders.length > 0) {
+      // Если нет текущей папки, загружаем первую
+      loadFolder(folders[0].id);
+      setCurrentFolderId(folders[0].id);
     }
-  }, [folders]); // Добавляем folders в зависимости
-
-  const [currentFolderId, setCurrentFolderId] = useState<number | null>(null);
+  }, [folders, currentFolderId]); // Зависимости
 
   const loadFolder = async (folderId: number) => {
     try {
       setLoading(true);
       const folderDetail = await getFolderById(folderId) as unknown as FolderDetail;
-      // Сортируем карточки по id (или другому полю)
       const sortedCards = [...(folderDetail.cards || [])].sort((a, b) => a.id - b.id);
 
       setCurrentCards(sortedCards);
       setCurrentFolderName(folderDetail.name);
-      setCurrentFolderId(folderId); // Сохраняем ID текущей папки
-      // Восстанавливаем позицию слайда после загрузки
+      
       setTimeout(() => {
         if (swiperRef.current) {
           swiperRef.current.slideTo(currentSlideIndex);
@@ -357,6 +356,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
               editForm.resetFields();
             }}
             disabled={isSubmitting}
+            className={styles.cancelEditCardBtn}
           >
             Отмена
           </Button>,
@@ -378,6 +378,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
             {isSubmitting ? 'Сохранение...' : 'Сохранить'}
           </Button>,
         ]}
+        className={styles.editCardModal}
       >
         <Spin spinning={isSubmitting} tip="Обновление карточки...">
           <Form form={editForm} layout="vertical" disabled={isSubmitting}>

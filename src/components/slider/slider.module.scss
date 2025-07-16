@@ -314,3 +314,12 @@
     }
   }
 }
+.editCardModal {
+  :global(.ant-modal-footer) {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+.cancelEditCardBtn {
+  margin-right: auto;
+}

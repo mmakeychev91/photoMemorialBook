@@ -24,6 +24,7 @@ const StartPage = (): JSX.Element => {
     const [editFolderForm] = Form.useForm();
     const [isUpdatingFolder, setIsUpdatingFolder] = useState(false);
 
+
     useEffect(() => {
         const fetchFolders = async () => {
             try {
@@ -40,9 +41,18 @@ const StartPage = (): JSX.Element => {
         fetchFolders();
     }, []);
 
+
+    // Добавляем эффект для установки начальной папки
+    useEffect(() => {
+        if (folders.length > 0 && !currentFolderId) {
+            setCurrentFolderId(folders[0].id); // Устанавливаем первую папку по умолчанию
+        }
+    }, [folders]);
+
     // Add this function to handle folder editing
     const handleEditFolder = async (folderId: number) => {
         try {
+            setCurrentFolderId(folderId); // Используем локальный setter
             const folderToEdit = folders.find(folder => folder.id === folderId);
             if (folderToEdit) {
                 setEditingFolder(folderToEdit);
@@ -69,8 +79,13 @@ const StartPage = (): JSX.Element => {
                     folder.id === updatedFolder.id ? updatedFolder : folder
                 )
             );
+
+            // Закрываем модалку
             editFolderForm.resetFields();
             setIsEditFolderModalVisible(false);
+
+            // Явно сохраняем текущий folderId
+            setCurrentFolderId(updatedFolder.id);
         } catch (err) {
             if (err instanceof Error) {
                 message.error(err.message);
@@ -182,6 +197,8 @@ const StartPage = (): JSX.Element => {
                         onAddCard={handleAddCard}
                         folders={folders}
                         onCreateFolder={() => setIsModalVisible(true)}
+                        currentFolderId={currentFolderId || undefined} // Преобразуем null в undefined
+                        setCurrentFolderId={setCurrentFolderId}
                     />
                 </>
             ) : (
