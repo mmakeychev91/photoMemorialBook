@@ -80,12 +80,9 @@ const StartPage = (): JSX.Element => {
                 )
             );
 
-            // Закрываем модалку
+            // Не сбрасываем currentFolderId, остаемся на той же папке
             editFolderForm.resetFields();
             setIsEditFolderModalVisible(false);
-
-            // Явно сохраняем текущий folderId
-            setCurrentFolderId(updatedFolder.id);
         } catch (err) {
             if (err instanceof Error) {
                 message.error(err.message);
