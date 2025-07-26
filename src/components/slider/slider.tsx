@@ -61,8 +61,15 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       const folderDetail = await getFolderById(folderId) as unknown as FolderDetail;
       const sortedCards = [...(folderDetail.cards || [])].sort((a, b) => a.id - b.id);
 
-      setCurrentCards(sortedCards);
+      // Добавляем folder_id к каждой карточке
+      const cardsWithFolderId = sortedCards.map(card => ({
+        ...card,
+        folder_id: folderId
+      }));
+
+      setCurrentCards(cardsWithFolderId);
       setCurrentFolderName(folderDetail.name);
+      setCurrentFolderId(folderId); // Обновляем currentFolderId
 
       setTimeout(() => {
         if (swiperRef.current) {
@@ -80,12 +87,12 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
 
   const handleEmptyStateAddCard = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     // Определяем активную папку (из меню или из пропсов)
-    const activeFolderId = activeMenuItemKey 
-      ? parseInt(activeMenuItemKey) 
+    const activeFolderId = activeMenuItemKey
+      ? parseInt(activeMenuItemKey)
       : currentFolderId || folders[0]?.id;
-  
+
     if (activeFolderId) {
       onAddCard(activeFolderId, () => loadFolder(activeFolderId));
     } else {
@@ -197,27 +204,34 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       const activeIndex = swiperRef.current?.activeIndex || 0;
       const values = await editForm.validateFields();
       const imageFile = values.image?.[0]?.originFileObj;
-
-      if (currentFolderId && currentCard) {
+  
+      if (!currentCard) {
+        throw new Error('Карточка не выбрана');
+      }
+  
+      // Используем folder_id из текущей карточки
+      const folderId = currentCard.folder_id;
+  
+      if (folderId && currentCard) {
         const updatedCard = await updateCard(
-          currentFolderId,
+          folderId,
           currentCard.id,
           values.description,
           imageFile
         );
-
+  
         message.success('Карточка обновлена!');
         setIsEditModalVisible(false);
-
+  
         // Обновляем только измененную карточку, сохраняя порядок
         setCurrentCards(prevCards =>
           prevCards.map(card =>
             card.id === currentCard.id
-              ? { ...card, ...updatedCard }
+              ? { ...card, ...updatedCard, folder_id: folderId } // Сохраняем folder_id
               : card
           )
         );
-
+  
         // Возвращаемся на тот же слайд
         setTimeout(() => {
           if (swiperRef.current) {

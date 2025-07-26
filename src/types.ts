@@ -15,5 +15,6 @@ export type Card = {
     id: number;
     file_path: string;
     description: string;
-    created_at?: string;  // Сделал необязательным, если сервер не всегда его возвращает
+    folder_id: number;  // Добавляем это поле
+    created_at?: string;
 };
