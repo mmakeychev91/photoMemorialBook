@@ -49,7 +49,6 @@ const StartPage = (): JSX.Element => {
         }
     }, [folders]);
 
-    // Add this function to handle folder editing
     const handleEditFolder = async (folderId: number) => {
         try {
             setCurrentFolderId(folderId); // Используем локальный setter

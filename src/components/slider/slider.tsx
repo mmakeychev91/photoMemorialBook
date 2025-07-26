@@ -52,10 +52,6 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
         loadFolder(folders[0].id);
         setCurrentFolderId(folders[0].id);
       }
-    } else if (folders.length > 0) {
-      // Если нет текущей папки, загружаем первую
-      loadFolder(folders[0].id);
-      setCurrentFolderId(folders[0].id);
     }
   }, [folders, currentFolderId]); // Зависимости
 
@@ -82,12 +78,10 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
     }
   };
 
-  const handleEmptyStateAddCard = (e: React.MouseEvent) => {
+  const handleEmptyStateAddCard = (folderId: number) => (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (currentFolderId) {
-      onAddCard(currentFolderId, () => loadFolder(currentFolderId)); // Обновляем текущую папку
-    }
-  };
+    onAddCard(folderId, () => loadFolder(folderId));
+};
 
   // Находим активный элемент меню
   const activeMenuItemKey = folders.find(
@@ -301,7 +295,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={handleEmptyStateAddCard}
+            onClick={handleEmptyStateAddCard(currentFolderId!)}
             className={styles.addButton}
           >
             Добавить
