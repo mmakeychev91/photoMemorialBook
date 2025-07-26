@@ -1,6 +1,7 @@
 import { Route, Routes, Navigate } from "react-router-dom";
 import StartPage from "../../pages/startPage/startPage";
 import Auth from "../../pages/auth/auth";
+import Register from "../../pages/register/register"; 
 import RootLayout from "./RootLayout";
 import { ProtectRoutes } from "../../hooks/protectRoutes";
 import { useFoldersService } from "../../services/folders/foldersService";
@@ -24,12 +25,13 @@ const App = (): JSX.Element => {
     return () => {
       window.removeEventListener('resize', updateViewportHeight);
     };
-  }, []); // Пустой массив зависимостей = выполняется только при монтировании
+  }, []);
 
   return (
     <Routes>
       <Route path="/" element={<Navigate to="home" />} />
       <Route path="/login" element={<Auth />} />
+      <Route path="/register" element={<Register />} /> {/* Добавляем маршрут регистрации */}
       <Route element={<ProtectRoutes />}>
         <Route element={<RootLayout />}>
           <Route path="/home" element={<StartPage />}></Route>

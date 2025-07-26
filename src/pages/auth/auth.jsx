@@ -4,6 +4,7 @@ import { ReactComponent as EyeIcon } from "../../resource/img/svg/form-eye.svg";
 import { ReactComponent as EyeOff } from "../../resource/img/svg/form-eye-off.svg";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../services/authService';
+import { Link } from 'react-router-dom';
 import styles from './auth.module.scss';
 
 const Auth = () => {
@@ -11,7 +12,7 @@ const Auth = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { login, token } = useAuth();
-    
+
     // Автоматический редирект при наличии токена
     useEffect(() => {
         if (token) {
@@ -20,7 +21,7 @@ const Auth = () => {
     }, [token, navigate]);
 
     const togglePasswordType = useCallback(() => {
-        setPasswordType((prevType) => 
+        setPasswordType((prevType) =>
             prevType === 'password' ? 'text' : 'password'
         );
     }, []);
@@ -28,9 +29,9 @@ const Auth = () => {
     const onFinish = async (values) => {
         setLoading(true);
         try {
-            await login({ 
-                username: values.username, 
-                password: values.password 
+            await login({
+                username: values.username,
+                password: values.password
             });
         } catch (error) {
             message.error(error.message || 'Ошибка авторизации');
@@ -49,22 +50,22 @@ const Auth = () => {
                 >
                     <Form.Item
                         name="username"
-                        rules={[{ 
-                            required: true, 
-                            message: 'Пожалуйста, введите логин!' 
+                        rules={[{
+                            required: true,
+                            message: 'Пожалуйста, введите логин!'
                         }]}
                     >
-                        <Input 
-                            placeholder="Логин" 
+                        <Input
+                            placeholder="Логин"
                             disabled={loading}
                         />
                     </Form.Item>
 
                     <Form.Item
                         name="password"
-                        rules={[{ 
-                            required: true, 
-                            message: 'Пожалуйста, введите пароль!' 
+                        rules={[{
+                            required: true,
+                            message: 'Пожалуйста, введите пароль!'
                         }]}
                     >
                         <Input.Password
@@ -72,22 +73,27 @@ const Auth = () => {
                             type={passwordType}
                             disabled={loading}
                             iconRender={(visible) => (
-                                visible ? 
-                                    <EyeOff onClick={togglePasswordType} /> : 
+                                visible ?
+                                    <EyeOff onClick={togglePasswordType} /> :
                                     <EyeIcon onClick={togglePasswordType} />
                             )}
                         />
                     </Form.Item>
 
                     <Form.Item>
-                        <Button 
-                            type="primary" 
-                            htmlType="submit" 
+                        <Button
+                            type="primary"
+                            htmlType="submit"
                             loading={loading}
                             block
                         >
                             Войти
                         </Button>
+                    </Form.Item>
+                    <Form.Item>
+                        <div className={styles.footer}>
+                            Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+                        </div>
                     </Form.Item>
                 </Form>
             </div>

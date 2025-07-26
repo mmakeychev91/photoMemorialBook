@@ -76,6 +76,29 @@ export const UserProvider = ({ children }) => {
         }
     };
 
+    const register = async (userData) => {
+        try {
+            const response = await fetch(`${_baseUrl}/api/auth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Registration failed');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Registration error:', error);
+            throw error;
+        }
+    };
+
+
     // Обновление токена
     const refreshToken = useCallback(async () => {
         if (!hasRefreshToken()) {
@@ -146,8 +169,9 @@ export const UserProvider = ({ children }) => {
         login,
         logout,
         refreshToken,
-        hasRefreshToken
-    }), [token, isLoading, login, logout, refreshToken, hasRefreshToken]);
+        hasRefreshToken,
+        register
+    }), [token, isLoading, login, logout, refreshToken, hasRefreshToken, register]);
 
     return (
         <UserContext.Provider value={value}>
