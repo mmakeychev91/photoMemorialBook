@@ -45,12 +45,12 @@ const StartPage = (): JSX.Element => {
     // Добавляем эффект для установки начальной папки
     useEffect(() => {
         if (folders.length > 0) {
-            // Если currentFolderId не установлен или не существует в текущих папках
-            if (!currentFolderId || !folders.some(f => f.id === currentFolderId)) {
-                setCurrentFolderId(folders[0].id);
-            }
+          // Если currentFolderId не установлен или не существует в folders, устанавливаем первую папку
+          if (!currentFolderId || !folders.some(f => f.id === currentFolderId)) {
+            setCurrentFolderId(folders[0].id);
+          }
         }
-    }, [folders]);
+      }, [folders, currentFolderId]);
 
     const handleEditFolder = async (folderId: number) => {
         try {
@@ -147,7 +147,7 @@ const StartPage = (): JSX.Element => {
     const handleAddCard = (folderId: number, afterAdd?: () => void) => {
         setCurrentFolderId(folderId); // Устанавливаем текущую папку
         setIsCardModalVisible(true);
-        afterAddCallback.current = afterAdd || null;
+        afterAddCallback.current = afterAdd || null; 
     };
 
     const handleCreateCard = async () => {
@@ -181,7 +181,7 @@ const StartPage = (): JSX.Element => {
         }
     };
 
-
+    
 
     if (loading) {
         return <Spin tip="Загрузка..." fullscreen />;
@@ -201,7 +201,7 @@ const StartPage = (): JSX.Element => {
                         onAddCard={handleAddCard}
                         folders={folders}
                         onCreateFolder={() => setIsModalVisible(true)}
-                        currentFolderId={currentFolderId || undefined} // Преобразуем null в undefined
+                        currentFolderId={currentFolderId ?? undefined}
                         setCurrentFolderId={setCurrentFolderId}
                     />
                 </>

@@ -80,16 +80,15 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
 
   const handleEmptyStateAddCard = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!currentFolderId) return;
-
-    // Добавляем проверку, что папка существует
-    const folderExists = folders.some(f => f.id === currentFolderId);
-    if (!folderExists) {
-      message.error('Выбранная папка не найдена');
-      return;
+    if (currentFolderId === undefined || currentFolderId === null) {
+      // Если currentFolderId не установлен, используем первую папку
+      const firstFolderId = folders[0]?.id;
+      if (firstFolderId) {
+        onAddCard(firstFolderId, () => loadFolder(firstFolderId));
+      }
+    } else {
+      onAddCard(currentFolderId, () => loadFolder(currentFolderId));
     }
-
-    onAddCard(currentFolderId, () => loadFolder(currentFolderId));
   };
 
   // Находим активный элемент меню
