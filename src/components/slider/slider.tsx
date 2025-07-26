@@ -80,14 +80,16 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
 
   const handleEmptyStateAddCard = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (currentFolderId === undefined || currentFolderId === null) {
-      // Если currentFolderId не установлен, используем первую папку
-      const firstFolderId = folders[0]?.id;
-      if (firstFolderId) {
-        onAddCard(firstFolderId, () => loadFolder(firstFolderId));
-      }
+    
+    // Определяем активную папку (из меню или из пропсов)
+    const activeFolderId = activeMenuItemKey 
+      ? parseInt(activeMenuItemKey) 
+      : currentFolderId || folders[0]?.id;
+  
+    if (activeFolderId) {
+      onAddCard(activeFolderId, () => loadFolder(activeFolderId));
     } else {
-      onAddCard(currentFolderId, () => loadFolder(currentFolderId));
+      message.error('Не найдена активная папка для добавления карточки');
     }
   };
 
