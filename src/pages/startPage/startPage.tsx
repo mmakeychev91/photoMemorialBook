@@ -44,8 +44,11 @@ const StartPage = (): JSX.Element => {
 
     // Добавляем эффект для установки начальной папки
     useEffect(() => {
-        if (folders.length > 0 && !currentFolderId) {
-            setCurrentFolderId(folders[0].id); // Устанавливаем первую папку по умолчанию
+        if (folders.length > 0) {
+            // Если currentFolderId не установлен или не существует в текущих папках
+            if (!currentFolderId || !folders.some(f => f.id === currentFolderId)) {
+                setCurrentFolderId(folders[0].id);
+            }
         }
     }, [folders]);
 
@@ -144,7 +147,7 @@ const StartPage = (): JSX.Element => {
     const handleAddCard = (folderId: number, afterAdd?: () => void) => {
         setCurrentFolderId(folderId); // Устанавливаем текущую папку
         setIsCardModalVisible(true);
-        afterAddCallback.current = afterAdd || null; 
+        afterAddCallback.current = afterAdd || null;
     };
 
     const handleCreateCard = async () => {
@@ -178,7 +181,7 @@ const StartPage = (): JSX.Element => {
         }
     };
 
-    
+
 
     if (loading) {
         return <Spin tip="Загрузка..." fullscreen />;
