@@ -20,7 +20,7 @@ interface Props {
   onDeleteFolder: (folderId: number) => void;
   onAddCard: (folderId: number, afterAdd?: () => void) => void;
   currentFolderId?: number;  // Делаем необязательным
-  setCurrentFolderId: (id: number) => void; 
+  setCurrentFolderId: (id: number) => void;
 }
 
 interface FolderDetail extends Folder {
@@ -67,7 +67,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
 
       setCurrentCards(sortedCards);
       setCurrentFolderName(folderDetail.name);
-      
+
       setTimeout(() => {
         if (swiperRef.current) {
           swiperRef.current.slideTo(currentSlideIndex);
@@ -85,7 +85,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   const handleEmptyStateAddCard = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (currentFolderId) {
-      onAddCard(currentFolderId, () => loadFolder(currentFolderId)); // Вызываем loadFolder после добавления
+      onAddCard(currentFolderId, () => loadFolder(currentFolderId)); // Обновляем текущую папку
     }
   };
 
@@ -105,7 +105,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
             icon={<PlusOutlined />}
             onClick={(e) => {
               e.stopPropagation();
-              onAddCard(folder.id, () => loadFolder(folder.id)); // Передаём колбэк
+              onAddCard(folder.id, () => loadFolder(folder.id)); // Передаём колбэк для обновления
             }}
           />
           <Button

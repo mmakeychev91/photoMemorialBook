@@ -140,15 +140,13 @@ const StartPage = (): JSX.Element => {
         }
     };
 
-    const handleAddCard = (folderId: number, afterAdd?: () => void) => {
-        setCurrentFolderId(folderId);
-        setIsCardModalVisible(true);
-        if (afterAdd) {
-            afterAddCallback.current = afterAdd;
-        }
-    };
-
     const afterAddCallback = useRef<(() => void) | null>(null);
+
+    const handleAddCard = (folderId: number, afterAdd?: () => void) => {
+        setCurrentFolderId(folderId); // Устанавливаем текущую папку
+        setIsCardModalVisible(true);
+        afterAddCallback.current = afterAdd || null; 
+    };
 
     const handleCreateCard = async () => {
         setIsSubmitting(true);
@@ -163,9 +161,14 @@ const StartPage = (): JSX.Element => {
                 cardForm.resetFields();
                 setIsCardModalVisible(false);
 
+                // После добавления карточки:
+                // 1. Обновляем папки (если нужно)
+                const updatedFolders = await getFolders();
+                setFolders(updatedFolders);
+
+                // 2. Вызываем колбэк (если он передан в Slider)
                 if (afterAddCallback.current) {
                     afterAddCallback.current();
-                    afterAddCallback.current = null;
                 }
             }
         } catch (err) {
@@ -175,6 +178,8 @@ const StartPage = (): JSX.Element => {
             setIsSubmitting(false);
         }
     };
+
+    
 
     if (loading) {
         return <Spin tip="Загрузка..." fullscreen />;
