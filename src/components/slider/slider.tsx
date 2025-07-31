@@ -1,6 +1,6 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Swiper as SwiperType } from 'swiper';
-import { A11y } from 'swiper/modules';
+import { A11y, Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import styles from "./slider.module.scss";
@@ -28,8 +28,13 @@ interface FolderDetail extends Folder {
 }
 
 const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDeleteFolder, onAddCard, currentFolderId, setCurrentFolderId }) => {
-  const { getFolderById, updateCard, deleteCard } = useFoldersService();
+  const navigationPrevRef = useRef<HTMLButtonElement>(null);
+  const navigationNextRef = useRef<HTMLButtonElement>(null);
   const swiperRef = useRef<SwiperType>();
+
+
+  const { getFolderById, updateCard, deleteCard } = useFoldersService();
+
   const [menuVisible, setMenuVisible] = useState(false);
   const [currentCards, setCurrentCards] = useState<Card[]>([]);
   const [currentFolderName, setCurrentFolderName] = useState('');
@@ -40,7 +45,6 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
-
 
   useEffect(() => {
     if (folders.length > 0 && currentFolderId) {
@@ -204,14 +208,14 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       const activeIndex = swiperRef.current?.activeIndex || 0;
       const values = await editForm.validateFields();
       const imageFile = values.image?.[0]?.originFileObj;
-  
+
       if (!currentCard) {
         throw new Error('Карточка не выбрана');
       }
-  
+
       // Используем folder_id из текущей карточки
       const folderId = currentCard.folder_id;
-  
+
       if (folderId && currentCard) {
         const updatedCard = await updateCard(
           folderId,
@@ -219,10 +223,10 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           values.description,
           imageFile
         );
-  
+
         message.success('Карточка обновлена!');
         setIsEditModalVisible(false);
-  
+
         // Обновляем только измененную карточку, сохраняя порядок
         setCurrentCards(prevCards =>
           prevCards.map(card =>
@@ -231,7 +235,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
               : card
           )
         );
-  
+
         // Возвращаемся на тот же слайд
         setTimeout(() => {
           if (swiperRef.current) {
@@ -326,36 +330,60 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           </Button>
         </div>
       ) : (
-        <Swiper
-          modules={[A11y]}
-          slidesPerView={1}
-          onSwiper={(swiper: SwiperType) => swiperRef.current = swiper}
-          // @ts-ignore
-          onSlideChange={(swiper) => setCurrentSlideIndex(swiper.activeIndex)}
-          className={styles.swiper}
-          a11y={{
-            prevSlideMessage: 'Предыдущий слайд',
-            nextSlideMessage: 'Следующий слайд',
-          }}
-        >
-          {currentCards.map((slide, index) => (
-            <SwiperSlide key={index} className={styles.slide}>
-              {slide.file_path && (
-                <img
-                  className={styles.img}
-                  src={`${_baseUrl}/${slide.file_path}`}
-                  alt={`Загрузка фото...`}
-                  loading="lazy"
-                />
-              )}
-              {slide.description && (
-                <div className={styles.text}>
-                  <p>{slide.description}</p>
-                </div>
-              )}
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        <div className={styles.swiperContainer}>
+          <Swiper
+            modules={[A11y, Navigation]}
+            slidesPerView={1}
+            onSwiper={(swiper: SwiperType) => swiperRef.current = swiper}
+            // @ts-ignore
+            onSlideChange={(swiper) => setCurrentSlideIndex(swiper.activeIndex)}
+            className={styles.swiper}
+            a11y={{
+              prevSlideMessage: 'Предыдущий слайд',
+              nextSlideMessage: 'Следующий слайд',
+            }}
+            navigation={{
+              prevEl: navigationPrevRef.current,
+              nextEl: navigationNextRef.current,
+              disabledClass: styles.swiperButtonDisabled,
+            }}
+          >
+            {currentCards.map((slide, index) => (
+              <SwiperSlide key={index} className={styles.slide}>
+                {slide.file_path && (
+                  <img
+                    className={styles.img}
+                    src={`${_baseUrl}/${slide.file_path}`}
+                    alt={`Загрузка фото...`}
+                    loading="lazy"
+                  />
+                )}
+                {slide.description && (
+                  <div className={styles.text}>
+                    <p>{slide.description}</p>
+                  </div>
+                )}
+              </SwiperSlide>
+            ))}
+          </Swiper>
+          {/* Кастомные кнопки навигации */}
+          {/* Кастомные кнопки навигации */}
+          <div className={styles.swiperNavigation}>
+            <button
+              ref={navigationPrevRef}
+              className={`${styles.swiperButton} ${styles.swiperButtonPrev}`}
+            >
+              &lt;
+            </button>
+            <button
+              ref={navigationNextRef}
+              className={`${styles.swiperButton} ${styles.swiperButtonNext}`}
+            >
+              &gt;
+            </button>
+          </div>
+        </div>
+
       )}
       {/* Модальное окно редактирования карточки */}
       <Modal

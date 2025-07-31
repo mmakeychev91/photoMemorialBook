@@ -6,7 +6,10 @@ const RootLayout = () => {
     return (
         <div className="app">
             <main className="main">
-                <Outlet />
+                <div className='container-desk'>
+                    <Outlet />
+                </div>
+
             </main>
         </div>
     );

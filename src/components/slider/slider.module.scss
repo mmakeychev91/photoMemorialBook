@@ -323,3 +323,62 @@
 .cancelEditCardBtn {
   margin-right: auto;
 }
+
+.swiperContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.swiperNavigation {
+  display: none; // По умолчанию скрываем на мобильных
+
+  @media (min-width: 768px) {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 10;
+    pointer-events: none;
+  }
+}
+
+.swiperButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+  font-size: 20px;
+  font-weight: bold;
+  border: none;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  &Prev {
+    left: 20px;
+  }
+
+  &Next {
+    right: 20px;
+  }
+
+  &Disabled {
+    opacity: 0.35;
+    cursor: auto;
+    pointer-events: none;
+  }
+}
