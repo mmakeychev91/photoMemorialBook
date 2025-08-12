@@ -84,6 +84,7 @@ h1,h2,h3,h4,h5,h6,ul,ol,li,p, a {
   z-index: 1001 !important;
 }
 .container-desk {
+  height: 100%;
   @media (min-width: 767px) {
     min-width: 360px;
     max-width: 767px;
