@@ -35,8 +35,17 @@
 .footer {
     text-align: center;
     margin-top: 16px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
     
-    a {
-        color: #1890ff;
+    a, button {
+        color: #1890ff !important;
+        font-weight: 500;
     }
 }
+.forgotPassword {
+    margin-top: 8px;
+  }

@@ -147,6 +147,41 @@ export const UserProvider = ({ children }) => {
         navigate('/login');
     }, [removeToken, navigate]);
 
+    const forgetPassword = async (email) => {
+        try {
+          const response = await fetchData({
+            url: `${_baseUrl}/api/auth/forget-password-by-code`,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            data: { email }
+          });
+          return response;
+        } catch (error) {
+          console.error('Forget password error:', error.response?.data);
+          throw new Error(error.response?.data?.detail || 'Ошибка при запросе сброса пароля');
+        }
+      };
+      
+      const restorePassword = async ({ email, code, new_password }) => {
+        try {
+          const response = await fetchData({
+            url: `${_baseUrl}/api/auth/restore-password-by-code`,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            data: { email, code, new_password }
+          });
+          return response;
+        } catch (error) {
+          console.error('Restore password error:', error.response?.data);
+          throw new Error(error.response?.data?.detail || 'Ошибка при восстановлении пароля');
+        }
+      };
+
     // Проверка авторизации при загрузке
     useEffect(() => {
         const checkAuth = async () => {
@@ -170,7 +205,9 @@ export const UserProvider = ({ children }) => {
         logout,
         refreshToken,
         hasRefreshToken,
-        register
+        register,
+        forgetPassword,
+        restorePassword
     }), [token, isLoading, login, logout, refreshToken, hasRefreshToken, register]);
 
     return (
