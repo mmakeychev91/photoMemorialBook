@@ -6,9 +6,12 @@ import Slider from '../../components/slider/slider';
 import type { Folder } from '../../types';
 import LogoutBtn from '../../components/logoutBtn/logoutBtn';
 import { PlusOutlined } from '@ant-design/icons';
+import { useAuth } from '../../services/authService'; // Импортируем хук аутентификации
+import EmailConfirmationModal from '../../components/EmailConfirmationModal/EmailConfirmationModal'; // Компонент для подтверждения email
 
 const StartPage = (): JSX.Element => {
     const { getFolders, createFolder, createCard, deleteFolder, updateFolder } = useFoldersService();
+    const { userInfo, isEmailConfirmed, sendEmailConfirmCode, confirmEmailByCode } = useAuth(); // Получаем информацию о пользователе
     const [form] = Form.useForm();
 
     const [loading, setLoading] = useState(true);
@@ -23,6 +26,7 @@ const StartPage = (): JSX.Element => {
     const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
     const [editFolderForm] = Form.useForm();
     const [isUpdatingFolder, setIsUpdatingFolder] = useState(false);
+    const [isEmailModalVisible, setIsEmailModalVisible] = useState(false); // Состояние для модалки подтверждения email
 
 
     useEffect(() => {
@@ -41,16 +45,32 @@ const StartPage = (): JSX.Element => {
         fetchFolders();
     }, []);
 
+    // Показываем модалку подтверждения email, если пользователь не подтвердил почту
+    useEffect(() => {
+        if (userInfo && !isEmailConfirmed) {
+            setIsEmailModalVisible(true);
+        }
+    }, [userInfo, isEmailConfirmed]);
 
     // Добавляем эффект для установки начальной папки
     useEffect(() => {
         if (folders.length > 0) {
-          // Если currentFolderId не установлен или не существует в folders, устанавливаем первую папку
-          if (!currentFolderId || !folders.some(f => f.id === currentFolderId)) {
-            setCurrentFolderId(folders[0].id);
-          }
+            if (!currentFolderId || !folders.some(f => f.id === currentFolderId)) {
+                setCurrentFolderId(folders[0].id);
+            }
         }
-      }, [folders, currentFolderId]);
+    }, [folders, currentFolderId]);
+
+
+    // Добавляем эффект для установки начальной папки
+    useEffect(() => {
+        if (folders.length > 0) {
+            // Если currentFolderId не установлен или не существует в folders, устанавливаем первую папку
+            if (!currentFolderId || !folders.some(f => f.id === currentFolderId)) {
+                setCurrentFolderId(folders[0].id);
+            }
+        }
+    }, [folders, currentFolderId]);
 
     const handleEditFolder = async (folderId: number) => {
         try {
@@ -147,7 +167,7 @@ const StartPage = (): JSX.Element => {
     const handleAddCard = (folderId: number, afterAdd?: () => void) => {
         setCurrentFolderId(folderId); // Устанавливаем текущую папку
         setIsCardModalVisible(true);
-        afterAddCallback.current = afterAdd || null; 
+        afterAddCallback.current = afterAdd || null;
     };
 
     const handleCreateCard = async () => {
@@ -181,7 +201,7 @@ const StartPage = (): JSX.Element => {
         }
     };
 
-    
+
 
     if (loading) {
         return <Spin tip="Загрузка..." fullscreen />;
@@ -363,6 +383,15 @@ const StartPage = (): JSX.Element => {
                     </Form.Item>
                 </Form>
             </Modal>
+            {/* Модальное окно подтверждения email */}
+            <EmailConfirmationModal
+                visible={isEmailModalVisible}
+                onCancel={() => setIsEmailModalVisible(false)}
+                onSendCode={sendEmailConfirmCode}
+                onConfirm={confirmEmailByCode}
+            />
+
+            {/* ... остальные модальные окна ... */}
         </>
     );
 }

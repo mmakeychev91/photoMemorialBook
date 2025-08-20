@@ -9,14 +9,26 @@
     position: relative;
     padding: 16px;
 }
+
 .text {
     display: block;
     text-align: center;
 }
+
 .createBtn {
     width: 100%;
 }
+
 :global(.ant-modal-confirm-btns) {
     display: flex;
     justify-content: center;
+}
+
+/* startPage.module.scss */
+.emailWarning {
+    margin-bottom: 20px;
+
+    .ant-alert {
+        border-radius: 8px;
+    }
 }

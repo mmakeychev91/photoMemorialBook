@@ -4,24 +4,21 @@ import Auth from "../../pages/auth/auth";
 import Register from "../../pages/register/register"; 
 import RootLayout from "./RootLayout";
 import { ProtectRoutes } from "../../hooks/protectRoutes";
-import { useFoldersService } from "../../services/folders/foldersService";
-import React, { useEffect, useState } from "react";
+import PrivacyPolicy from "../../pages/legal/PrivacyPolicy/PrivacyPolicy";
+import UserAgreement from "../../pages/legal/UserAgreement/UserAgreement";
+import DataProcessingAgreement from "../../pages/legal/DataProcessingAgreement/DataProcessingAgreement";
+import React, { useEffect } from "react";
 
 const App = (): JSX.Element => {
   useEffect(() => {
-    // Функция для обновления --vh
     const updateViewportHeight = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
     };
 
-    // Устанавливаем начальное значение
     updateViewportHeight();
-
-    // Добавляем обработчик ресайза
     window.addEventListener('resize', updateViewportHeight);
 
-    // Удаляем обработчик при размонтировании компонента
     return () => {
       window.removeEventListener('resize', updateViewportHeight);
     };
@@ -31,7 +28,13 @@ const App = (): JSX.Element => {
     <Routes>
       <Route path="/" element={<Navigate to="home" />} />
       <Route path="/login" element={<Auth />} />
-      <Route path="/register" element={<Register />} /> {/* Добавляем маршрут регистрации */}
+      <Route path="/register" element={<Register />} />
+      
+      {/* Маршруты для юридических документов */}
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/user-agreement" element={<UserAgreement />} />
+      <Route path="/data-processing-agreement" element={<DataProcessingAgreement />} />
+      
       <Route element={<ProtectRoutes />}>
         <Route element={<RootLayout />}>
           <Route path="/home" element={<StartPage />}></Route>
