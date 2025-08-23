@@ -19,7 +19,7 @@ interface Props {
   onEditFolder: (folderId: number) => void;
   onDeleteFolder: (folderId: number) => void;
   onAddCard: (folderId: number, afterAdd?: () => void) => void;
-  currentFolderId?: number;  // Делаем необязательным
+  currentFolderId?: number;
   setCurrentFolderId: (id: number) => void;
 }
 
@@ -32,7 +32,6 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   const navigationNextRef = useRef<HTMLButtonElement>(null);
   const swiperRef = useRef<SwiperType>();
 
-
   const { getFolderById, updateCard, deleteCard } = useFoldersService();
 
   const [menuVisible, setMenuVisible] = useState(false);
@@ -44,20 +43,18 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
   const [editForm] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
+  const [swiperReady, setSwiperReady] = useState(false);
 
   useEffect(() => {
     if (folders.length > 0 && currentFolderId) {
-      // Загружаем текущую папку, если она существует
       if (folders.some(f => f.id === currentFolderId)) {
         loadFolder(currentFolderId);
       } else {
-        // Если текущей папки нет (например, была удалена), загружаем первую
         loadFolder(folders[0].id);
         setCurrentFolderId(folders[0].id);
       }
     }
-  }, [folders, currentFolderId]); // Зависимости
+  }, [folders, currentFolderId]);
 
   const loadFolder = async (folderId: number) => {
     try {
@@ -65,7 +62,6 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       const folderDetail = await getFolderById(folderId) as unknown as FolderDetail;
       const sortedCards = [...(folderDetail.cards || [])].sort((a, b) => a.id - b.id);
 
-      // Добавляем folder_id к каждой карточке
       const cardsWithFolderId = sortedCards.map(card => ({
         ...card,
         folder_id: folderId
@@ -73,13 +69,23 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
 
       setCurrentCards(cardsWithFolderId);
       setCurrentFolderName(folderDetail.name);
-      setCurrentFolderId(folderId); // Обновляем currentFolderId
+      setCurrentFolderId(folderId);
 
+      setSwiperReady(false);
+      
+      // Даем время для рендера перед обновлением Swiper
       setTimeout(() => {
         if (swiperRef.current) {
-          swiperRef.current.slideTo(currentSlideIndex);
+          swiperRef.current.slideTo(0);
+          swiperRef.current.update();
+          // Обновляем навигацию после загрузки данных
+          setTimeout(() => {
+            if (swiperRef.current && swiperRef.current.navigation) {
+              swiperRef.current.navigation.update();
+            }
+          }, 50);
         }
-      }, 0);
+      }, 100);
     } catch (err) {
       console.error('Ошибка при загрузке папки', err);
       message.error('Не удалось загрузить данные папки');
@@ -89,10 +95,23 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
     }
   };
 
+  const handleSwiperInit = (swiper: SwiperType) => {
+    swiperRef.current = swiper;
+    
+    // Откладываем инициализацию навигации до полного рендера
+    setTimeout(() => {
+      if (navigationPrevRef.current && navigationNextRef.current) {
+        // Swiper автоматически инициализирует навигацию, нам нужно только обновить
+        if (swiper.navigation) {
+          swiper.navigation.update();
+        }
+        setSwiperReady(true);
+      }
+    }, 100);
+  };
+
   const handleEmptyStateAddCard = (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    // Определяем активную папку (из меню или из пропсов)
     const activeFolderId = activeMenuItemKey
       ? parseInt(activeMenuItemKey)
       : currentFolderId || folders[0]?.id;
@@ -104,7 +123,6 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
     }
   };
 
-  // Находим активный элемент меню
   const activeMenuItemKey = folders.find(
     folder => folder.name === currentFolderName
   )?.id.toString();
@@ -120,7 +138,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
             icon={<PlusOutlined />}
             onClick={(e) => {
               e.stopPropagation();
-              onAddCard(folder.id, () => loadFolder(folder.id)); // Передаём колбэк для обновления
+              onAddCard(folder.id, () => loadFolder(folder.id));
             }}
           />
           <Button
@@ -159,18 +177,13 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           await deleteCard(currentFolderId, currentCard.id);
           message.success('Карточка удалена!');
 
-          // Обновляем список карточек
           const updatedCards = currentCards.filter(card => card.id !== currentCard.id);
           setCurrentCards(updatedCards);
-
-          // Закрываем модальное окно
           setIsEditModalVisible(false);
 
-          // Если карточек не осталось, показываем пустое состояние
           if (updatedCards.length === 0) {
             setCurrentSlideIndex(0);
           } else if (swiperRef.current) {
-            // Возвращаемся к предыдущему слайду, если возможно
             swiperRef.current.slideTo(Math.min(currentSlideIndex, updatedCards.length - 1));
           }
         }
@@ -180,15 +193,14 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       console.error(err);
     }
   };
-  // Обработчик клика по пункту меню
+
   const handleMenuClick = async ({ key }: { key: string }) => {
     const folderId = parseInt(key);
-    setCurrentSlideIndex(0); // Сбрасываем индекс при смене папки
+    setCurrentSlideIndex(0);
     await loadFolder(folderId);
     setMenuVisible(false);
   };
 
-  // Обработчик клика по кнопке редактирования
   const handleEditCard = () => {
     if (swiperRef.current && currentCards.length > 0) {
       const activeIndex = swiperRef.current.activeIndex;
@@ -196,7 +208,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       setCurrentCard(card);
       editForm.setFieldsValue({
         description: card.description,
-        image: [] // Очищаем загруженные файлы
+        image: []
       });
       setIsEditModalVisible(true);
     }
@@ -213,7 +225,6 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
         throw new Error('Карточка не выбрана');
       }
 
-      // Используем folder_id из текущей карточки
       const folderId = currentCard.folder_id;
 
       if (folderId && currentCard) {
@@ -227,16 +238,14 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
         message.success('Карточка обновлена!');
         setIsEditModalVisible(false);
 
-        // Обновляем только измененную карточку, сохраняя порядок
         setCurrentCards(prevCards =>
           prevCards.map(card =>
             card.id === currentCard.id
-              ? { ...card, ...updatedCard, folder_id: folderId } // Сохраняем folder_id
+              ? { ...card, ...updatedCard, folder_id: folderId }
               : card
           )
         );
 
-        // Возвращаемся на тот же слайд
         setTimeout(() => {
           if (swiperRef.current) {
             swiperRef.current.slideTo(activeIndex);
@@ -259,7 +268,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
         className={styles.editCardButton}
         onClick={handleEditCard}
       />
-      {/* Кнопка бургер-меню */}
+      
       <Button
         type="text"
         icon={<MenuOutlined className={styles.burgerIcon} />}
@@ -267,7 +276,6 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
         onClick={() => setMenuVisible(true)}
       />
 
-      {/* Полноэкранное меню */}
       <Drawer
         placement="right"
         onClose={() => setMenuVisible(false)}
@@ -299,7 +307,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
             icon={<PlusOutlined />}
             onClick={() => {
               onCreateFolder();
-              setMenuVisible(false); // Закрываем меню после нажатия
+              setMenuVisible(false);
             }}
           >
             Создать список
@@ -309,14 +317,11 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       </Drawer>
 
       {loading ? (
-
-
         <div className={styles.skeletonWrapper}>
           <div className={styles.skeletonSlide}>
             <Skeleton.Image active className={styles.skeletonImage} />
           </div>
         </div>
-
       ) : currentCards.length === 0 ? (
         <div className={styles.emptyState}>
           <p className={styles.emptyMessage}>Похоже, этот список не содержит карточек</p>
@@ -334,9 +339,8 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           <Swiper
             modules={[A11y, Navigation]}
             slidesPerView={1}
-            onSwiper={(swiper: SwiperType) => swiperRef.current = swiper}
-            // @ts-ignore
-            onSlideChange={(swiper) => setCurrentSlideIndex(swiper.activeIndex)}
+            onSwiper={handleSwiperInit}
+            onSlideChange={(swiper: SwiperType) => setCurrentSlideIndex(swiper.activeIndex)}
             className={styles.swiper}
             a11y={{
               prevSlideMessage: 'Предыдущий слайд',
@@ -347,6 +351,14 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
               nextEl: navigationNextRef.current,
               disabledClass: styles.swiperButtonDisabled,
             }}
+            onAfterInit={(swiper: SwiperType) => {
+              // Обновляем навигацию после полной инициализации
+              setTimeout(() => {
+                if (swiper.navigation) {
+                  swiper.navigation.update();
+                }
+              }, 100);
+            }}
           >
             {currentCards.map((slide, index) => (
               <SwiperSlide key={index} className={styles.slide}>
@@ -356,6 +368,14 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
                     src={`${_baseUrl}/${slide.file_path}`}
                     alt={`Загрузка фото...`}
                     loading="lazy"
+                    onLoad={() => {
+                      if (swiperRef.current && swiperRef.current.navigation) {
+                        setTimeout(() => {
+                          swiperRef.current?.update();
+                          swiperRef.current?.navigation?.update();
+                        }, 50);
+                      }
+                    }}
                   />
                 )}
                 {slide.description && (
@@ -366,26 +386,26 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
               </SwiperSlide>
             ))}
           </Swiper>
-          {/* Кастомные кнопки навигации */}
-          {/* Кастомные кнопки навигации */}
-          <div className={styles.swiperNavigation}>
-            <button
-              ref={navigationPrevRef}
-              className={`${styles.swiperButton} ${styles.swiperButtonPrev}`}
-            >
-              &lt;
-            </button>
-            <button
-              ref={navigationNextRef}
-              className={`${styles.swiperButton} ${styles.swiperButtonNext}`}
-            >
-              &gt;
-            </button>
-          </div>
+          
+          {currentCards.length > 1 && (
+            <div className={styles.swiperNavigation}>
+              <button
+                ref={navigationPrevRef}
+                className={`${styles.swiperButton} ${styles.swiperButtonPrev}`}
+              >
+                &lt;
+              </button>
+              <button
+                ref={navigationNextRef}
+                className={`${styles.swiperButton} ${styles.swiperButtonNext}`}
+              >
+                &gt;
+              </button>
+            </div>
+          )}
         </div>
-
       )}
-      {/* Модальное окно редактирования карточки */}
+
       <Modal
         title="Редактировать карточку"
         open={isEditModalVisible}
@@ -394,7 +414,6 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           editForm.resetFields();
         }}
         footer={[
-          ,
           <Button
             key="cancel"
             onClick={() => {
