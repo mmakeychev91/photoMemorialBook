@@ -3,6 +3,7 @@ import { useHttp } from '../../hooks/http.hook';
 import _baseUrl from '../../urlConfiguration';
 import useToken from '../../hooks/useToken/useToken';
 import { useAuth } from '../authService';
+import { message } from 'antd';
 
 export interface PaymentResponse {
   confirmation_url: string;
@@ -30,10 +31,26 @@ export const usePaymentService = () => {
         }
       });
 
-      // Приводим тип ответа к PaymentResponse
       return response as PaymentResponse;
     } catch (error: unknown) {
       console.error("Ошибка при создании платежа:", error);
+
+      // Получаем статус ошибки
+      const errorStatus = (error as any)?.status;
+      const errorMessage = error instanceof Error ? error.message : '';
+
+      // Проверяем 403 ошибку (Forbidden - уже оплатили)
+      const isAlreadyPaid = errorStatus === 403 || 
+        errorMessage.includes('403') || 
+        errorMessage.includes('Forbidden');
+
+      if (isAlreadyPaid) {
+        message.info('Вы уже оплатили подписку. Переходим на главную...', 3);
+        setTimeout(() => {
+          window.location.href = '/home';
+        }, 2000);
+        throw new Error("Доступ уже оплачен");
+      }
 
       // Проверяем ошибку авторизации (401)
       const isUnauthorized = error instanceof Error &&
@@ -50,9 +67,9 @@ export const usePaymentService = () => {
         }
       }
 
-      const errorMessage = error instanceof Error ? error.message : 'Ошибка при создании платежа';
-      console.error("Ошибка запроса:", errorMessage);
-      throw new Error(errorMessage);
+      const finalErrorMessage = error instanceof Error ? error.message : 'Ошибка при создании платежа';
+      console.error("Ошибка запроса:", finalErrorMessage);
+      throw new Error(finalErrorMessage);
     }
   };
 

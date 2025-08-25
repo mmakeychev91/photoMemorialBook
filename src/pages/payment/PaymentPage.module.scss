@@ -1,0 +1,138 @@
+/* src/pages/payment/PaymentPage.module.css */
+.paymentPage {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  :global(.ant-btn) {
+    white-space: wrap;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    height: auto;
+  }
+  :global(.ant-divider) {
+    margin: 0;
+  }
+}
+
+.container {
+  max-width: 600px;
+  width: 100%;
+}
+
+.paymentCard {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.content {
+  width: 100%;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.header h2 {
+  color: #ff4d4f;
+  margin: 0;
+}
+
+.infoSection {
+  background: #fafafa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.subscribeButton {
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 16px 0;
+}
+
+.paymentLinkButton {
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  background: #52c41a;
+  border-color: #52c41a;
+}
+
+.paymentLinkButton:hover {
+  background: #73d13d;
+  border-color: #73d13d;
+}
+
+.copyButton {
+  height: 44px;
+}
+
+.refreshButton {
+  height: 44px;
+  margin: 16px 0;
+  background: #1890ff;
+  border-color: #1890ff;
+  color: white;
+}
+
+.refreshButton:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+  color: white;
+}
+
+.thankYou {
+  text-align: center;
+  font-size: 16px;
+  color: #666;
+  margin-top: 24px;
+  font-weight: 500;
+}
+
+.support {
+  text-align: center;
+  color: #666;
+  margin-top: 16px;
+}
+
+.supportLink {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+.supportLink:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .paymentPage {
+    padding: 16px;
+  }
+
+  .paymentCard {
+    margin: 0 8px;
+  }
+}
+
+.refreshButton {
+  height: 44px;
+  margin: 16px 0;
+  background: #1890ff;
+  border-color: #1890ff;
+  color: white;
+  display: inline-flex;
+  width: 100%;
+  padding: 8px 15px;
+  text-align: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  background: #1677ff;
+}

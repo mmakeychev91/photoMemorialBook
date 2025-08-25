@@ -303,7 +303,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           className={styles.menuContent}
         />
         <div className={styles.support}>
-          <p>Возник вопрос? Напиши нам на почту  <a href="mailto:pravsklad@mail.ru">pravsklad@mail.ru</a></p>
+          <p>Возник вопрос? Напишите нам на почту  <a href="mailto:pravsklad@mail.ru">pravsklad@mail.ru</a></p>
         </div>
         <div className={styles.menuFooter}>
           {/* Контакты поддержки */}

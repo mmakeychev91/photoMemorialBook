@@ -1,10 +1,11 @@
 // src/pages/payment/PaymentPage.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, Typography, Alert, Space, Divider, Spin, message } from 'antd';
-import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, Card, Typography, Alert, Space, Divider, message } from 'antd';
+import { ReloadOutlined, CopyOutlined, CheckOutlined } from '@ant-design/icons';
 import { usePaymentService } from '../../services/payment/payMentService';
-import styles from './PaymentPage.module.css';
+import { Link } from 'react-router-dom';
+import styles from './PaymentPage.module.scss';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -12,10 +13,8 @@ const PaymentPage: React.FC = () => {
   const navigate = useNavigate();
   const { createPayment } = usePaymentService();
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const handleGoBack = () => {
-    navigate(-1);
-  };
+  const [paymentUrl, setPaymentUrl] = useState<string>('');
+  const [isCopied, setIsCopied] = useState(false);
 
   const handleSubscribe = async () => {
     setIsProcessing(true);
@@ -23,17 +22,39 @@ const PaymentPage: React.FC = () => {
       const paymentResponse = await createPayment();
 
       if (paymentResponse && paymentResponse.confirmation_url) {
-        // Открываем ссылку на оплату в новом окне
-        window.open(paymentResponse.confirmation_url);
-        message.success('Ссылка для оплаты получена. Открываю страницу оплаты...');
-      } else {
-        message.error('Не удалось получить ссылку для оплаты');
+        setPaymentUrl(paymentResponse.confirmation_url);
       }
+      // Ошибка 403 обрабатывается в сервисе и показывает сообщение + редирект
     } catch (err: unknown) {
+      // Общие ошибки (кроме 403, которая уже обработана в сервисе)
       const errorMessage = err instanceof Error ? err.message : 'Ошибка при создании платежа';
-      message.error(errorMessage);
+      if (!errorMessage.includes('Доступ уже оплачен')) {
+        // Показываем только если это не ошибка "уже оплачено"
+        message.error(errorMessage);
+      }
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleOpenPayment = () => {
+    if (paymentUrl) {
+      // Пытаемся открыть в текущем окне (работает в Safari)
+      window.location.href = paymentUrl;
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (paymentUrl) {
+      navigator.clipboard.writeText(paymentUrl)
+        .then(() => {
+          setIsCopied(true);
+          message.success('Ссылка скопирована в буфер обмена');
+          setTimeout(() => setIsCopied(false), 2000);
+        })
+        .catch(() => {
+          message.error('Не удалось скопировать ссылку');
+        });
     }
   };
 
@@ -47,7 +68,7 @@ const PaymentPage: React.FC = () => {
         <Card className={styles.paymentCard}>
           <Space direction="vertical" size="large" className={styles.content}>
             <div className={styles.header}>
-              <Title level={2}>❌ У вас закончился пробный период.</Title>
+              <Title level={2}>❌ У вас заблокирован сервис</Title>
             </div>
 
             <Alert
@@ -62,30 +83,62 @@ const PaymentPage: React.FC = () => {
                 <Text strong>Стоимость подписки:</Text> 50 рублей в месяц
               </Paragraph>
 
-              <Paragraph>
-                Для оформления подписки перейдите по ссылке:
-              </Paragraph>
+              {!paymentUrl ? (
+                <>
+                  <Button
+                    type="primary"
+                    size="large"
+                    onClick={handleSubscribe}
+                    className={styles.subscribeButton}
+                    block
+                    loading={isProcessing}
+                    disabled={isProcessing}
+                  >
+                    Получить ссылку для оплаты
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Paragraph>
+                    <Text strong>Ссылка для оплаты готова:</Text>
+                  </Paragraph>
 
-              <Button
-                type="primary"
-                size="large"
-                onClick={handleSubscribe}
-                className={styles.subscribeButton}
-                block
-                loading={isProcessing}
-                disabled={isProcessing}
-              >
-                Перейти к оплате
-              </Button>
+                  <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                    <Button
+                      type="primary"
+                      size="large"
+                      onClick={handleOpenPayment}
+                      className={styles.paymentLinkButton}
+                      block
+                    >
+                      💳 Перейти к оплате
+                    </Button>
+
+                    <Button
+                      icon={isCopied ? <CheckOutlined /> : <CopyOutlined />}
+                      onClick={handleCopyLink}
+                      className={styles.copyButton}
+                      block
+                    >
+                      {isCopied ? 'Скопировано!' : 'Скопировать ссылку'}
+                    </Button>
+                  </Space>
+                </>
+              )}
 
               <Divider />
+              <Link className={styles.refreshButton} to="/">На главную</Link>
+
 
               <Paragraph className={styles.thankYou}>
                 Приятного пользования! Спасибо что остаетесь с нами!
-
               </Paragraph>
-              <Paragraph className={styles.thankYou}>
-                Возник вопрос? Напиши нам на почту  <a href="mailto:pravsklad@mail.ru">pravsklad@mail.ru</a>
+
+              <Paragraph className={styles.support}>
+                Возник вопрос? Напишите нам на почту {' '}
+                <a href="mailto:pravsklad@mail.ru" className={styles.supportLink}>
+                  pravsklad@mail.ru
+                </a>
               </Paragraph>
             </div>
           </Space>
