@@ -24,7 +24,7 @@ const PaymentPage: React.FC = () => {
 
       if (paymentResponse && paymentResponse.confirmation_url) {
         // Открываем ссылку на оплату в новом окне
-        window.open(paymentResponse.confirmation_url, '_blank');
+        window.open(paymentResponse.confirmation_url);
         message.success('Ссылка для оплаты получена. Открываю страницу оплаты...');
       } else {
         message.error('Не удалось получить ссылку для оплаты');
