@@ -114,14 +114,6 @@ const PaymentPage: React.FC = () => {
                       💳 Перейти к оплате
                     </Button>
 
-                    <Button
-                      icon={isCopied ? <CheckOutlined /> : <CopyOutlined />}
-                      onClick={handleCopyLink}
-                      className={styles.copyButton}
-                      block
-                    >
-                      {isCopied ? 'Скопировано!' : 'Скопировать ссылку'}
-                    </Button>
                   </Space>
                 </>
               )}
