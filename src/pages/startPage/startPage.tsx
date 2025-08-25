@@ -1,14 +1,14 @@
 import styles from './startPage.module.scss';
-import { Button, Modal, Form, Input, message, Spin, Alert, Upload } from 'antd';
+import { Button, Modal, Form, Input, message, Spin, Alert, Upload, Typography } from 'antd';
 import { useFoldersService } from "../../services/folders/foldersService";
 import React, { useEffect, useState, useRef } from "react";
 import Slider from '../../components/slider/slider';
 import type { Folder } from '../../types';
 import LogoutBtn from '../../components/logoutBtn/logoutBtn';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, MailOutlined } from '@ant-design/icons';
 import { useAuth } from '../../services/authService'; // Импортируем хук аутентификации
 import EmailConfirmationModal from '../../components/EmailConfirmationModal/EmailConfirmationModal'; // Компонент для подтверждения email
-
+const { Text } = Typography;
 const StartPage = (): JSX.Element => {
     const { getFolders, createFolder, createCard, deleteFolder, updateFolder } = useFoldersService();
     const { userInfo, isEmailConfirmed, sendEmailConfirmCode, confirmEmailByCode } = useAuth(); // Получаем информацию о пользователе

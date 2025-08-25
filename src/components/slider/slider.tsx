@@ -6,9 +6,9 @@ import 'swiper/css/navigation';
 import styles from "./slider.module.scss";
 import type { Card, FoldersArray, Folder } from '../../types';
 import _baseUrl from '../../urlConfiguration';
-import { MenuOutlined, CloseOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { MenuOutlined, CloseOutlined, PlusOutlined, EditOutlined, DeleteOutlined, MailOutlined } from '@ant-design/icons';
 import { useRef, useState, useEffect } from 'react';
-import { Button, Menu, Drawer, message, Spin, Modal, Form, Input, Upload } from 'antd';
+import { Button, Menu, Drawer, message, Spin, Modal, Form, Input, Upload, Typography } from 'antd';
 import { useFoldersService } from '../../services/folders/foldersService';
 import LogoutBtn from '../logoutBtn/logoutBtn';
 import { Skeleton } from 'antd';
@@ -26,6 +26,8 @@ interface Props {
 interface FolderDetail extends Folder {
   cards: Card[];
 }
+
+const { Text } = Typography;
 
 const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDeleteFolder, onAddCard, currentFolderId, setCurrentFolderId }) => {
   const navigationPrevRef = useRef<HTMLButtonElement>(null);
@@ -72,7 +74,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
       setCurrentFolderId(folderId);
 
       setSwiperReady(false);
-      
+
       // Даем время для рендера перед обновлением Swiper
       setTimeout(() => {
         if (swiperRef.current) {
@@ -97,7 +99,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
 
   const handleSwiperInit = (swiper: SwiperType) => {
     swiperRef.current = swiper;
-    
+
     // Откладываем инициализацию навигации до полного рендера
     setTimeout(() => {
       if (navigationPrevRef.current && navigationNextRef.current) {
@@ -268,7 +270,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
         className={styles.editCardButton}
         onClick={handleEditCard}
       />
-      
+
       <Button
         type="text"
         icon={<MenuOutlined className={styles.burgerIcon} />}
@@ -300,7 +302,12 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           onClick={handleMenuClick}
           className={styles.menuContent}
         />
+        <div className={styles.support}>
+          <p>Возник вопрос? Напиши нам на почту  <a href="mailto:pravsklad@mail.ru">pravsklad@mail.ru</a></p>
+        </div>
         <div className={styles.menuFooter}>
+          {/* Контакты поддержки */}
+
           <Button
             className={styles.createBtn}
             type="primary"
@@ -312,7 +319,9 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
           >
             Создать список
           </Button>
+
           <LogoutBtn />
+
         </div>
       </Drawer>
 
@@ -386,7 +395,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
               </SwiperSlide>
             ))}
           </Swiper>
-          
+
           {currentCards.length > 1 && (
             <div className={styles.swiperNavigation}>
               <button

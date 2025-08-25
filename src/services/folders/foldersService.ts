@@ -222,6 +222,17 @@ export const useFoldersService = () => {
         } catch (error: unknown) {
             console.log("Ошибка:", error);
 
+            // Проверяем 423 ошибку (Payment Required)
+            const isPaymentRequired = error instanceof Error &&
+                (error.message.includes("423") || error.message.includes("payment")) ||
+                (error as any)?.status === 423;
+
+            if (isPaymentRequired) {
+                // Перенаправляем на страницу оплаты
+                window.location.href = '/payment';
+                throw new Error("Требуется оплата подписки");
+            }
+
             const isUnauthorized = error instanceof Error &&
                 error.message.includes("Could not validate credentials");
 

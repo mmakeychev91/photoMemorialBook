@@ -1,0 +1,94 @@
+/* src/pages/payment/PaymentPage.module.css */
+.paymentPage {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .container {
+    max-width: 600px;
+    width: 100%;
+  }
+  
+  .backButton {
+    margin-bottom: 16px;
+    color: #666;
+  }
+  
+  .backButton:hover {
+    color: #1890ff !important;
+  }
+  
+  .paymentCard {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .content {
+    width: 100%;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .header h2 {
+    color: #ff4d4f;
+    margin: 0;
+  }
+  
+  .infoSection {
+    background: #fafafa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+  }
+  
+  .subscribeButton {
+    height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 16px 0;
+  }
+  
+  .refreshButton {
+    height: 44px;
+    margin: 16px 0;
+    background: #52c41a;
+    border-color: #52c41a;
+    color: white;
+  }
+  
+  .refreshButton:hover {
+    background: #73d13d;
+    border-color: #73d13d;
+    color: white;
+  }
+  
+  .note {
+    font-style: italic;
+    margin-top: 16px;
+    text-align: center;
+  }
+  
+  .thankYou {
+    text-align: center;
+    font-size: 16px;
+    color: #666;
+    margin-top: 24px;
+    font-weight: 500;
+  }
+  
+  @media (max-width: 768px) {
+    .paymentPage {
+      padding: 16px;
+    }
+    
+    .paymentCard {
+      margin: 0 8px;
+    }
+  }

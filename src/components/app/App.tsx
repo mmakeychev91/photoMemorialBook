@@ -8,6 +8,7 @@ import PrivacyPolicy from "../../pages/legal/PrivacyPolicy/PrivacyPolicy";
 import UserAgreement from "../../pages/legal/UserAgreement/UserAgreement";
 import DataProcessingAgreement from "../../pages/legal/DataProcessingAgreement/DataProcessingAgreement";
 import React, { useEffect } from "react";
+import PaymentPage from '../../pages/payment/PaymentPage';
 
 const App = (): JSX.Element => {
   useEffect(() => {
@@ -40,6 +41,7 @@ const App = (): JSX.Element => {
           <Route path="/home" element={<StartPage />}></Route>
         </Route>
       </Route>
+      <Route path="/payment" element={<PaymentPage />} />
     </Routes>
   )
 };
