@@ -18,12 +18,6 @@ const PaymentPage: React.FC = () => {
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const { fetchUserInfo, userInfo } = useAuth();
 
-  // Добавьте этот useEffect для проверки при монтировании компонента
-  useEffect(() => {
-    // При загрузке страницы проверяем и сразу редиректим на главную
-    navigate('/home');
-  }, [navigate]);
-
   // Проверяем доступ при загрузке страницы и при изменении userInfo
   useEffect(() => {
     const checkAccess = async () => {
