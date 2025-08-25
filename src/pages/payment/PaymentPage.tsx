@@ -1,11 +1,12 @@
 // src/pages/payment/PaymentPage.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, Typography, Alert, Space, Divider, message } from 'antd';
-import { ReloadOutlined, CopyOutlined, CheckOutlined } from '@ant-design/icons';
+import { Button, Card, Typography, Alert, Space, Divider, message, Spin } from 'antd';
 import { usePaymentService } from '../../services/payment/payMentService';
 import { Link } from 'react-router-dom';
 import styles from './PaymentPage.module.scss';
+import { useAuth } from '../../services/authService';
+import { useEffect } from 'react';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -14,7 +15,32 @@ const PaymentPage: React.FC = () => {
   const { createPayment } = usePaymentService();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState<string>('');
-  const [isCopied, setIsCopied] = useState(false);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  const { fetchUserInfo, userInfo } = useAuth();
+
+  // Проверяем доступ при загрузке страницы
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        setIsCheckingAccess(true);
+        const userData = await fetchUserInfo();
+
+        // Проверяем, есть ли доступ у пользователя
+        if (userData?.has_access) {
+          message.info('У вас уже есть доступ. Переходим на главную...');
+          setTimeout(() => navigate('/home'), 2000);
+          return;
+        }
+      } catch (error) {
+        console.error('Ошибка при проверке доступа:', error);
+        // Если ошибка, остаемся на странице оплаты
+      } finally {
+        setIsCheckingAccess(false);
+      }
+    };
+
+    checkAccess();
+  }, [fetchUserInfo, navigate]);
 
   const handleSubscribe = async () => {
     setIsProcessing(true);
@@ -44,23 +70,14 @@ const PaymentPage: React.FC = () => {
     }
   };
 
-  const handleCopyLink = () => {
-    if (paymentUrl) {
-      navigator.clipboard.writeText(paymentUrl)
-        .then(() => {
-          setIsCopied(true);
-          message.success('Ссылка скопирована в буфер обмена');
-          setTimeout(() => setIsCopied(false), 2000);
-        })
-        .catch(() => {
-          message.error('Не удалось скопировать ссылку');
-        });
-    }
-  };
-
-  const handleRefresh = () => {
-    window.location.reload();
-  };
+  // Если проверяем доступ, показываем спиннер
+  if (isCheckingAccess) {
+    return (
+      <div className={styles.loadingContainer}>
+        <Spin size="large" tip="Проверка доступа..." />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.paymentPage}>
