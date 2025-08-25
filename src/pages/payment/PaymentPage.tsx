@@ -18,11 +18,28 @@ const PaymentPage: React.FC = () => {
   const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const { fetchUserInfo, userInfo } = useAuth();
 
-  // Проверяем доступ при загрузке страницы
+
+
+  // Проверяем доступ при загрузке страницы и при изменении userInfo
   useEffect(() => {
     const checkAccess = async () => {
       try {
         setIsCheckingAccess(true);
+
+        // Если userInfo уже есть, проверяем его
+        if (userInfo) {
+          if (userInfo.has_access) {
+            message.info('У вас уже есть доступ. Переходим на главную...');
+            setTimeout(() => navigate('/home'), 2000);
+            return;
+          } else {
+            // Если userInfo есть, но доступа нет, прекращаем проверку
+            setIsCheckingAccess(false);
+            return;
+          }
+        }
+
+        // Если userInfo нет, запрашиваем его
         const userData = await fetchUserInfo();
 
         // Проверяем, есть ли доступ у пользователя
@@ -40,7 +57,7 @@ const PaymentPage: React.FC = () => {
     };
 
     checkAccess();
-  }, [fetchUserInfo, navigate]);
+  }, [fetchUserInfo, navigate, userInfo]);
 
   const handleSubscribe = async () => {
     setIsProcessing(true);
