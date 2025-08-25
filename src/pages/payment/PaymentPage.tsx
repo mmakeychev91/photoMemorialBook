@@ -44,16 +44,6 @@ const PaymentPage: React.FC = () => {
   return (
     <div className={styles.paymentPage}>
       <div className={styles.container}>
-        <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          onClick={handleGoBack}
-          className={styles.backButton}
-          disabled={isProcessing}
-        >
-          Назад
-        </Button>
-
         <Card className={styles.paymentCard}>
           <Space direction="vertical" size="large" className={styles.content}>
             <div className={styles.header}>
