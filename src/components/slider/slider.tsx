@@ -333,7 +333,7 @@ const Slider: React.FC<Props> = ({ folders, onCreateFolder, onEditFolder, onDele
         </div>
       ) : currentCards.length === 0 ? (
         <div className={styles.emptyState}>
-          <p className={styles.emptyMessage}>Похоже, этот список не содержит карточек</p>
+          <p className={styles.emptyMessage}>Похоже, этот список не содержит карточек. После добавления карточек свайпайте пальцем вправо и влево для перемещения между карточками.</p>
           <Button
             type="primary"
             icon={<PlusOutlined />}
