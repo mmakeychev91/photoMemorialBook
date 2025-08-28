@@ -6,7 +6,6 @@ import _baseUrl from '../../urlConfiguration';
 import styles from './register.module.scss';
 
 interface FormValues {
-    username: string;
     email: string;
     password: string;
     confirmPassword: string;
@@ -77,17 +76,26 @@ export const Register = () => {
         try {
             console.log('Отправка данных на сервер:', {
                 endpoint: `${_baseUrl}/api/auth/register`,
-                data: values
+                data: {
+                    username: values.email, // Используем email как username
+                    email: values.email,
+                    password: values.password
+                }
             });
 
-            // Убираем поле agreeToTerms перед отправкой на сервер
-            const { agreeToTerms, ...registerData } = values;
+            // Отправляем данные на сервер, используя email как username
+            const registerData = {
+                username: values.email,
+                email: values.email,
+                password: values.password
+            };
+            
             const response = await register(registerData);
             console.log('Ответ сервера:', response);
 
             try {
                 await login({
-                    username: values.username,
+                    username: values.email, // Используем email для входа
                     password: values.password
                 });
                 message.success('Регистрация успешна! Вы автоматически вошли в систему.');
@@ -105,7 +113,7 @@ export const Register = () => {
             message.error(errorMsg);
 
             if (errorMsg.toLowerCase().includes('username') || errorMsg.toLowerCase().includes('логин')) {
-                form.setFields([{ name: 'username', errors: [errorMsg] }]);
+                form.setFields([{ name: 'email', errors: [errorMsg] }]);
             } else if (errorMsg.toLowerCase().includes('email') || errorMsg.toLowerCase().includes('почт')) {
                 form.setFields([{ name: 'email', errors: [errorMsg] }]);
             } else if (errorMsg.toLowerCase().includes('password') || errorMsg.toLowerCase().includes('парол')) {
@@ -124,7 +132,7 @@ export const Register = () => {
 
                 {errorMessage && (
                     <Alert
-                        message="Ошибка регистрации. Возможно введенные логин или email уже заняты"
+                        message="Ошибка регистрации. Возможно введенный email уже занят"
                         description={errorMessage}
                         type="error"
                         showIcon
@@ -140,28 +148,12 @@ export const Register = () => {
                     onFieldsChange={() => setErrorMessage(null)}
                 >
                     <Form.Item
-                        name="username"
-                        rules={[
-                            { required: true, message: 'Пожалуйста, введите логин!' },
-                            { min: 4, message: 'Минимум 4 символа' },
-                            { max: 20, message: 'Максимум 20 символов' }
-                        ]}
-                        validateStatus={errorMessage?.toLowerCase().includes('username') ? 'error' : ''}
-                    >
-                        <Input
-                            placeholder="Логин"
-                            disabled={loading}
-                            onChange={() => setErrorMessage(null)}
-                        />
-                    </Form.Item>
-
-                    <Form.Item
                         name="email"
                         rules={[
                             { required: true, message: 'Пожалуйста, введите email!' },
                             { type: 'email', message: 'Некорректный email' }
                         ]}
-                        validateStatus={errorMessage?.toLowerCase().includes('email') ? 'error' : ''}
+                        validateStatus={errorMessage?.toLowerCase().includes('email') || errorMessage?.toLowerCase().includes('username') ? 'error' : ''}
                     >
                         <Input
                             placeholder="Email"

@@ -133,11 +133,11 @@ const Auth = () => {
                         name="username"
                         rules={[{
                             required: true,
-                            message: 'Пожалуйста, введите логин!'
+                            message: 'Пожалуйста, введите email!'
                         }]}
                     >
                         <Input
-                            placeholder="Логин"
+                            placeholder="Email"
                             disabled={loading}
                         />
                     </Form.Item>
